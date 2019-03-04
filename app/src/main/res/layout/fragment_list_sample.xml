@@ -26,7 +26,8 @@
             android:layout_weight="1"
             android:text="UTC"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginLeft="8dp" />
 
         <TextView
             android:id="@+id/utcTextView"
@@ -37,7 +38,8 @@
             android:layout_marginTop="8dp"
             android:layout_weight="1"
             app:layout_constraintStart_toEndOf="@+id/utcHeader"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginLeft="8dp" />
 
         <TextView
             android:id="@+id/satsHeader"
@@ -48,7 +50,9 @@
             android:layout_marginEnd="8dp"
             android:drawableStart="@drawable/ic_satellite_variant"
             app:layout_constraintEnd_toStartOf="@+id/satTextView"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginRight="8dp"
+            android:drawableLeft="@drawable/ic_satellite_variant" />
 
         <TextView
             android:id="@+id/satTextView"
@@ -58,7 +62,8 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginRight="8dp" />
 
         <Button
             android:id="@+id/submitSample"
@@ -73,7 +78,10 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/brgHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/brgHeader"
+            android:layout_alignParentRight="true"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="12dp" />
 
         <TextView
             android:id="@+id/latHeader"
@@ -84,7 +92,8 @@
             android:layout_marginTop="8dp"
             android:text="Latitude:"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/utcHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/utcHeader"
+            android:layout_marginLeft="8dp" />
 
         <TextView
             android:id="@+id/latTextView"
@@ -94,7 +103,8 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             app:layout_constraintStart_toEndOf="@+id/latHeader"
-            app:layout_constraintTop_toBottomOf="@+id/utcHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/utcHeader"
+            android:layout_marginLeft="8dp" />
 
         <TextView
             android:id="@+id/lngHeader"
@@ -105,7 +115,8 @@
             android:layout_marginEnd="8dp"
             android:text="Longitude:"
             app:layout_constraintEnd_toStartOf="@+id/lngTextView"
-            app:layout_constraintTop_toBottomOf="@+id/utcHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/utcHeader"
+            android:layout_marginRight="8dp" />
 
         <TextView
             android:id="@+id/lngTextView"
@@ -115,7 +126,8 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/utcHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/utcHeader"
+            android:layout_marginRight="8dp" />
 
         <TextView
             android:id="@+id/altHeader"
@@ -126,7 +138,8 @@
             android:layout_marginTop="8dp"
             android:text="Altitude:"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/latHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/latHeader"
+            android:layout_marginLeft="8dp" />
 
         <TextView
             android:id="@+id/altTextView"
@@ -136,7 +149,8 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             app:layout_constraintStart_toEndOf="@+id/altHeader"
-            app:layout_constraintTop_toBottomOf="@+id/latHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/latHeader"
+            android:layout_marginLeft="8dp" />
 
         <TextView
             android:id="@+id/accHeader"
@@ -147,7 +161,8 @@
             android:layout_marginEnd="8dp"
             android:text="Accuracy:"
             app:layout_constraintEnd_toStartOf="@+id/accTextView"
-            app:layout_constraintTop_toBottomOf="@+id/latHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/latHeader"
+            android:layout_marginRight="8dp" />
 
         <TextView
             android:id="@+id/accTextView"
@@ -157,7 +172,8 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/latHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/latHeader"
+            android:layout_marginRight="8dp" />
 
         <TextView
             android:id="@+id/brgHeader"
@@ -168,7 +184,8 @@
             android:layout_marginTop="8dp"
             android:text="Bearing:"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/altHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/altHeader"
+            android:layout_marginLeft="8dp" />
 
         <TextView
             android:id="@+id/brgTextView"
@@ -178,7 +195,8 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             app:layout_constraintStart_toEndOf="@+id/brgHeader"
-            app:layout_constraintTop_toBottomOf="@+id/altHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/altHeader"
+            android:layout_marginLeft="8dp" />
 
         <TextView
             android:id="@+id/spdHeader"
@@ -189,7 +207,8 @@
             android:layout_marginEnd="8dp"
             android:text="Speed:"
             app:layout_constraintEnd_toStartOf="@+id/spdTextView"
-            app:layout_constraintTop_toBottomOf="@+id/altHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/altHeader"
+            android:layout_marginRight="8dp" />
 
         <TextView
             android:id="@+id/spdTextView"
@@ -199,7 +218,8 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/altHeader" />
+            app:layout_constraintTop_toBottomOf="@+id/altHeader"
+            android:layout_marginRight="8dp" />
 
         <TextView
             android:id="@+id/textView20"
@@ -233,9 +253,10 @@
                 app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/textView20"
-                tools:listitem="layout/list_item_experiment" />
-
-
+                tools:listitem="@layout/list_item_experiment"
+                android:layout_alignParentRight="true"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="13dp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

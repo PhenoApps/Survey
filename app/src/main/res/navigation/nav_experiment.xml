@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<navigation xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<navigation xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_navigation"
     app:startDestination="@+id/experiment_fragment">
+
+    <action android:id="@+id/action_plot_sats" app:destination="@+id/satellite_plot_fragment"
+        app:enterAnim="@anim/slide_in_right"
+        app:exitAnim="@anim/slide_out_left"
+        app:popEnterAnim="@anim/slide_in_left"
+        app:popExitAnim="@anim/slide_out_right"/>
 
     <fragment
         android:id="@+id/experiment_fragment"
@@ -19,9 +26,6 @@
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"/>
 
-        <action
-            android:id="@+id/action_experiment_fragment_to_satellite_plot_fragment"
-            app:destination="@id/satellite_plot_fragment"/>
     </fragment>
 
     <fragment
@@ -49,11 +53,8 @@
             app:popExitAnim="@anim/slide_out_right"/>
 
         <action
-            android:id="@+id/action_sample_list_fragment_to_map_fragment"
+            android:id="@+id/action_map_locations"
             app:destination="@id/fragment_map"/>
-        <action
-            android:id="@+id/action_sample_list_fragment_to_satellite_plot_fragment"
-            app:destination="@id/satellite_plot_fragment" />
 
     </fragment>
 
@@ -65,9 +66,6 @@
         <argument
             android:name="experiment"
             app:argType="edu.ksu.wheatgenetics.survey.data.Experiment" />
-        <action
-            android:id="@+id/action_fragment_map_to_satellite_plot_fragment"
-            app:destination="@id/satellite_plot_fragment" />
     </fragment>
 
     <fragment
@@ -77,3 +75,4 @@
         tools:layout="@layout/fragment_sample">
     </fragment>
 </navigation>
+

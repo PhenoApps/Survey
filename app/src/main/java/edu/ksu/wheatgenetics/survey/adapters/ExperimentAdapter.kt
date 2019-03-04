@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import androidx.navigation.Navigation
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -33,12 +34,15 @@ class ExperimentAdapter(
         getItem(position).let { experiment ->
             with(holder) {
                 itemView.tag = experiment
+
                 bind(createOnClickListener(experiment), experiment)
             }
         }
     }
 
     private fun createOnClickListener(experiment: Experiment): View.OnClickListener {
+        //TODO replace with Navigation class
+        //Navigation.createNavigateOnClickListener(R.id.action_experiment_fragment_to_sample_list_fragment, )
         return View.OnClickListener {
             val direction =
                     ExperimentListFragmentDirections.actionExperimentFragmentToSampleListFragment(experiment)

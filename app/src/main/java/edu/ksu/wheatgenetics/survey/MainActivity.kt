@@ -18,6 +18,10 @@ import androidx.databinding.DataBindingUtil
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.onNavDestinationSelected
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.analytics.FirebaseAnalytics
 import edu.ksu.wheatgenetics.survey.databinding.ActivityMainBinding
@@ -28,8 +32,11 @@ import java.text.SimpleDateFormat
 //Experiment Activity
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var mDrawerLayout: DrawerLayout
-    private lateinit var mDrawerToggle: ActionBarDrawerToggle
+    private val mFirebaseAnalytics by lazy {
+        FirebaseAnalytics.getInstance(this)
+    }
+
+    private lateinit var mBinding: ActivityMainBinding
 
     private lateinit var mNavController: NavController
 
@@ -53,92 +60,62 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
-        mDrawerToggle = object : ActionBarDrawerToggle(this, mDrawerLayout,
-                R.string.drawer_open, R.string.drawer_close) {
-        }
-        mDrawerToggle.isDrawerIndicatorEnabled = true
-        mDrawerLayout.addDrawerListener(mDrawerToggle)
+        mBinding = DataBindingUtil.setContentView(this,
+                R.layout.activity_main)
+
+        mNavController = Navigation.findNavController(this, R.id.experiment_nav_fragment)
+
+        val appBarConfig = AppBarConfiguration(mNavController.graph)
+
+        setSupportActionBar(mBinding.toolbar)
+
+        setupActionBarWithNavController(mNavController, appBarConfig)
+
+        mBinding.nvView.setupWithNavController(mNavController)
+
         supportActionBar.apply {
             title = "Survey"
             this?.let {
                 it.themedContext
-                setDisplayHomeAsUpEnabled(true)
-                setHomeButtonEnabled(true)
+                //setDisplayHomeAsUpEnabled(true)
+                //setHomeButtonEnabled(true)
             }
         }
-
-        // Setup drawer view
-        val nvDrawer = findViewById<NavigationView>(R.id.nvView)
-
-        nvDrawer.setNavigationItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_plot_satellites -> {
-                    //keep the user from opening multiple satellite fragments
-                    if (!(mNavController.currentDestination?.label ?: "").contains("Satellite"))
-                        mNavController.navigate(R.id.satellite_plot_fragment)
-                }
-            }
-            mDrawerLayout.closeDrawers()
-            true
-        }
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
 
-        FirebaseAnalytics.getInstance(this)
-                .logEvent(FirebaseAnalytics.Event.APP_OPEN,
-                        Bundle().apply {
-                            putString(FirebaseAnalytics.Param.TERM, "HELLO")
-                        })
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.APP_OPEN,
+                    Bundle().apply {
+                        putString(FirebaseAnalytics.Param.TERM, "HELLO")
+                    })
 
-
-
-        val binding: ActivityMainBinding = DataBindingUtil.setContentView(this,
-                R.layout.activity_main)
-
-        mDrawerLayout = binding.drawerLayout
-
-        mNavController = Navigation.findNavController(this, R.id.experiment_nav_fragment)
-
-        val toolbar = binding.toolbar
-        setSupportActionBar(toolbar)
-        
         if (isFineLocationAccessible()) {
             setupLocationUpdates()
         }
 
-        //TODO check external storage permissions in setupLocationUpdates
+        /*TODO check external storage permissions when exporting file
         if (isExternalStorageWritable()) {
             mSurveyDirectory = File(Environment.getExternalStorageDirectory().path + "/Survey")
             if (!mSurveyDirectory.isDirectory) {
                 mSurveyDirectory.mkdirs()
             }
-        }
+        }*/
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-
-        val dl = findViewById<DrawerLayout>(R.id.drawer_layout)
-
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            return true
-        }
-        when (item.itemId) {
-            android.R.id.home -> dl.openDrawer(GravityCompat.START)
-            else -> return super.onOptionsItemSelected(item)
-        }
-        return true
+        return item.onNavDestinationSelected(mNavController) || super.onOptionsItemSelected(item)
     }
+
 
     override fun onRequestPermissionsResult(resultCode: Int, permissions: Array<String>, granted: IntArray) {
         permissions.forEachIndexed { index, perm ->
             when {
                 perm == Manifest.permission.ACCESS_FINE_LOCATION
                         && granted[index] == PackageManager.PERMISSION_GRANTED -> {
-
+                    setupLocationUpdates()
                 }
                 perm == Manifest.permission.WRITE_EXTERNAL_STORAGE
                         && granted[index] == PackageManager.PERMISSION_GRANTED -> {
@@ -148,32 +125,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onPostCreate(savedInstanceState: Bundle?) {
-        super.onPostCreate(savedInstanceState)
-        mDrawerToggle.syncState()
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        mDrawerToggle.onConfigurationChanged(newConfig)
-    }
-
     //stop the geo nav service
     override fun onStop() {
         super.onStop()
-        removeLocationUpdates()
-    }
-
-    private fun removeLocationUpdates() {
         val geoNavServiceIntent = Intent(this, GeoNavService::class.java)
         stopService(geoNavServiceIntent)
     }
 
-    /**
-     * 1. starts geo nav service
-     * 2. sets up communication between service and this context
-     * 3. attempts to get google map
-     */
+    override fun onSupportNavigateUp() =
+        mNavController.navigateUp()
+
     private fun setupLocationUpdates() {
         val geoNavServiceIntent = Intent(this, GeoNavService::class.java)
         ContextCompat.startForegroundService(this, geoNavServiceIntent)

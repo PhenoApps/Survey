@@ -19,6 +19,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.crash.FirebaseCrash
 import edu.ksu.wheatgenetics.survey.GeoNavService
 import edu.ksu.wheatgenetics.survey.NmeaParser
 import edu.ksu.wheatgenetics.survey.R
@@ -33,6 +34,9 @@ import kotlin.concurrent.fixedRateTimer
 
 class SampleListFragment: Fragment() {
 
+    private val mFirebaseAnalytics by lazy {
+        FirebaseAnalytics.getInstance(requireContext())
+    }
     //this object contains an array of sample models including sample name, person, and experiment id
     private lateinit var mViewModel: SampleListViewModel
 
@@ -63,8 +67,14 @@ class SampleListFragment: Fragment() {
                 override fun onReceive(context: Context, intent: Intent) {
 
                     if (intent.hasExtra(GeoNavService.GNSS_EXTRA)) {
-                        parser.parse(intent
-                                .getStringExtra(GeoNavService.GNSS_EXTRA))
+                        try {
+                            parser.parse(intent
+                                    .getStringExtra(GeoNavService.GNSS_EXTRA))
+                        } catch (e: Exception) {
+                            mFirebaseAnalytics.logEvent("PARSERERROR", Bundle().apply {
+                                putString("ERROR", e.stackTrace.toString())
+                            })
+                        }
                     } else if (intent.hasExtra(GeoNavService.LOCATION_EXTRA)) {
                         mLastLocation = intent.getDoubleArrayExtra(GeoNavService.LOCATION_EXTRA)
                     }
@@ -142,18 +152,6 @@ class SampleListFragment: Fragment() {
         inflater.inflate(R.menu.activity_main_toolbar, menu)
 
        // return super.onCreateOptionsMenu(menu, inflater)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_map_locations -> {
-                findNavController().navigate(
-                        SampleListFragmentDirections
-                                .actionSampleListFragmentToMapFragment(mExperiment))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
     }
 
     private val handler = Handler {
