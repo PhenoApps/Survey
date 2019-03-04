@@ -3,6 +3,7 @@ package edu.ksu.wheatgenetics.survey.fragments
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.text.InputType
@@ -41,6 +42,8 @@ class SampleListFragment: Fragment() {
 
     private var parser = NmeaParser()
 
+    private lateinit var mLastLocation: DoubleArray
+
     private lateinit var mAdapter: SampleAdapter
 
     override fun onCreateView(
@@ -51,17 +54,18 @@ class SampleListFragment: Fragment() {
 
         setHasOptionsMenu(true)
 
+        parser = NmeaParser()
+
         val lbm = LocalBroadcastManager.getInstance(requireContext()).apply {
             registerReceiver(object : BroadcastReceiver() {
 
                 override fun onReceive(context: Context, intent: Intent) {
 
-                    if (intent.hasExtra(GeoNavService.PLOT_ID)) {
+                    if (intent.hasExtra(GeoNavService.GNSS_EXTRA)) {
                         parser.parse(intent
-                                .getStringExtra(GeoNavService.PLOT_ID))
-                        /*Log.d("NMEA", intent
-                                .getStringExtra(GeoNavService.PLOT_ID))*/
-
+                                .getStringExtra(GeoNavService.GNSS_EXTRA))
+                    } else if (intent.hasExtra(GeoNavService.LOCATION_EXTRA)) {
+                        mLastLocation = intent.getDoubleArrayExtra(GeoNavService.LOCATION_EXTRA)
                     }
                 }
             }, GeoNavService.filter)
@@ -69,8 +73,6 @@ class SampleListFragment: Fragment() {
 
         //if arguments is null we don't have an experiment id and must return immediately
         //arguments ?: findNavController().popBackStack()
-
-        parser = NmeaParser()
 
         fixedRateTimer("GNSSUpdates", false, 0, 1) {
             handler.obtainMessage().sendToTarget()
@@ -155,14 +157,28 @@ class SampleListFragment: Fragment() {
 
     private val handler = Handler {
 
-        mBinding.latTextView.text = parser.latitude
-        mBinding.lngTextView.text = parser.longitude
-        mBinding.accTextView.text = parser.fix
-        mBinding.spdTextView.text = parser.speed
-        mBinding.utcTextView.text = parser.utc
-        mBinding.brgTextView.text = parser.bearing
-        mBinding.satTextView.text = parser.satellites
-        mBinding.altTextView.text = parser.altitude
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            mBinding.latTextView.text = parser.latitude
+            mBinding.lngTextView.text = parser.longitude
+            mBinding.accTextView.text = parser.fix
+            mBinding.spdTextView.text = parser.speed
+            mBinding.utcTextView.text = parser.utc
+            mBinding.brgTextView.text = parser.bearing
+            if (parser.satellites.isEmpty()) {
+                mBinding.satTextView.text = "${parser.gsv.size}"
+            } else {
+                val maxSats = maxOf(parser.satellites.toInt(), parser.gsv.size)
+                mBinding.satTextView.text = "${parser.gsv.size}/$maxSats"
+            }
+            mBinding.altTextView.text = parser.altitude
+        } else {
+            mLastLocation?.let {
+                mBinding.latTextView.text = it[0].toString()
+                mBinding.lngTextView.text = it[1].toString()
+                mBinding.accTextView.text = "GPS or Net"
+            }
+        }
+
          true
     }
 }

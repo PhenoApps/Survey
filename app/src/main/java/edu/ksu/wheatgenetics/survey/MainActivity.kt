@@ -171,14 +171,14 @@ class MainActivity : AppCompatActivity() {
     private fun isFineLocationAccessible(): Boolean {
         if (PermissionChecker.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) return true
-        else requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQ_FINE_LOCATION)
-
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQ_FINE_LOCATION)
+        }
         return false
     }
 
     internal companion object {
-        const val packageName = "org.phenoapps.survey"
-        const val EXTRA_EXPERIMENT_ID = "$packageName.EXTRA_EXPERIMENT_ID"
+        const val packageName = "org.phenoapps.wheatgenetics.survey"
 
         //requests
         const val REQ_EXT_STORAGE = 101

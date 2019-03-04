@@ -8,9 +8,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.location.GnssMeasurement
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Pair
@@ -37,15 +39,18 @@ class GeoNavService : Service() {
 
         super.onCreate()
 
-
         if (ActivityCompat.checkSelfPermission(this,
                         Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             mLocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                     mMinTime, mMinDist, mLocationListener)
-            //mLocManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-            //        mMinTime, mMinDist, mLocationListener)
-            mLocManager.addNmeaListener { s: String?, l: Long ->
-                    broadcast(s)
+            mLocManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                    mMinTime, mMinDist, mLocationListener)
+
+            //GNSS updates are only available to version >= 24
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                mLocManager.addNmeaListener { s: String?, l: Long ->
+                        broadcast(s)
+                }
             }
         }
     }
@@ -68,6 +73,7 @@ class GeoNavService : Service() {
         startForeground(1, notification)
         return super.onStartCommand(intent, flags, startId)
     }
+
     override fun onBind(intent: Intent): IBinder? {
         return null
     }
@@ -76,18 +82,11 @@ class GeoNavService : Service() {
     private fun <T> broadcast(data: T) {
         LocalBroadcastManager.getInstance(this)
             .sendBroadcast(when (data) {
-                is Pair<*,*> -> Intent(BROADCAST_LOCATION).apply {
-                    putExtra(LAT, data.first as Double)
-                    putExtra(LNG, data.second as Double)
+                is DoubleArray -> Intent(BROADCAST_LOCATION).apply {
+                    putExtra(LOCATION_EXTRA, data)
                 }
-                is Location -> Intent(BROADCAST_LOCATION).apply {
-                    putExtra(LOCATION, data)
-                }
-                is String -> Intent(BROADCAST_PLOT_ID).apply {
-                    putExtra(PLOT_ID, data)
-                }
-                is Float -> Intent(BROADCAST_ACCURACY).apply {
-                    putExtra(ACCURACY, data)
+                is String -> Intent(BROADCAST_NMEA).apply {
+                    putExtra(GNSS_EXTRA, data)
                 }
                 else -> Intent()
             })
@@ -99,8 +98,7 @@ class GeoNavService : Service() {
 
             //check if accuracy is below the maximum requested accuracy
             if (location.hasAccuracy() && location.accuracy <= mMaxAccuracy) {
-                //broadcast<Pair<Double, Double>>(Pair(location.latitude, location.longitude))
-                //broadcast<Float>(location.accuracy)
+                broadcast(doubleArrayOf(location.latitude, location.longitude))
             }
         }
 
@@ -119,33 +117,18 @@ class GeoNavService : Service() {
 
     internal companion object {
 
-        val BROADCAST_LOCATION = "edu.ksu.wheatgenetics.fieldmapping.BROADCAST_LOCATION"
+        val BROADCAST_LOCATION = "edu.ksu.wheatgenetics.survey.BROADCAST_LOCATION"
 
-        val BROADCAST_PLOT_ID = "edu.ksu.wheatgenetics.fieldmapping.BROADCAST_PLOT_ID"
+        val BROADCAST_NMEA = "edu.ksu.wheatgenetics.survey.BROADCAST_NMEA"
 
-        val BROADCAST_ACCURACY = "edu.ksu.wheatgenetics.fieldmapping.BROADCAST_ACCURACY"
+        val LOCATION_EXTRA = "edu.ksu.wheatgenetics.survey.LOCATION_EXTRA"
 
-        //key for defining gps parameters
-        val GPS_PARAMETERS = "edu.ksu.wheatgenetics.fieldmapping.PARAMETERS"
-
-        //extras
-        internal val MAP_EXTRA = "edu.ksu.wheatgenetics.geonav.MAP_EXTRA"
-
-        //key for accurate gps location data
-        val LAT = "edu.ksu.wheatgenetics.survey.LAT"
-        val LNG = "edu.ksu.wheatgenetics.survey.LNG"
-
-        val LOCATION = "edu.ksu.wheatgenetics.fieldmapping.LOCATION"
-
-        val PLOT_ID = "edu.ksu.wheatgenetics.fieldmapping.PLOT_ID"
-
-        val ACCURACY = "edu.ksu.wheatgenetics.fieldmapping.ACCURACY"
+        val GNSS_EXTRA = "edu.ksu.wheatgenetics.survey.LATLNG_EXTRA"
 
         val filter = IntentFilter().apply {
             //addAction(SurveyActivity.BROADCAST_BT_OUTPUT)
             addAction(GeoNavService.BROADCAST_LOCATION)
-            addAction(GeoNavService.BROADCAST_ACCURACY)
-            addAction(GeoNavService.BROADCAST_PLOT_ID)
+            addAction(GeoNavService.BROADCAST_NMEA)
         }
     }
 }

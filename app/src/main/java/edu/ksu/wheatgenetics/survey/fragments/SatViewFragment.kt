@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.hardware.*
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.view.LayoutInflater
@@ -61,9 +62,9 @@ class SatViewFragment: Fragment(), SensorEventListener {
 
                 override fun onReceive(context: Context, intent: Intent) {
 
-                    if (intent.hasExtra(GeoNavService.PLOT_ID)) {
+                    if (intent.hasExtra(GeoNavService.GNSS_EXTRA)) {
                         parser.parse(intent
-                                .getStringExtra(GeoNavService.PLOT_ID))
+                                .getStringExtra(GeoNavService.BROADCAST_NMEA))
                         /*Log.d("NMEA", intent
                                 .getStringExtra(GeoNavService.PLOT_ID))*/
 
@@ -84,13 +85,17 @@ class SatViewFragment: Fragment(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
-        arrayOf(Sensor.TYPE_ACCELEROMETER, Sensor.TYPE_MAGNETIC_FIELD).forEach { type ->
-            sensorManager.getDefaultSensor(type)?.also {
-                sensorManager.registerListener(
-                        this,
-                        it, SensorManager.SENSOR_DELAY_NORMAL,
-                        SensorManager.SENSOR_DELAY_UI
-                )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+
+            arrayOf(Sensor.TYPE_ACCELEROMETER, Sensor.TYPE_MAGNETIC_FIELD).forEach { type ->
+                sensorManager.getDefaultSensor(type)?.also {
+                    sensorManager.registerListener(
+                            this,
+                            it, SensorManager.SENSOR_DELAY_NORMAL,
+                            SensorManager.SENSOR_DELAY_UI
+                    )
+                }
             }
         }
     }
@@ -104,17 +109,19 @@ class SatViewFragment: Fragment(), SensorEventListener {
 
         mBinding.graph.subscribe(parser.gsv)
 
-        SensorManager.getRotationMatrix(
-                rotationMatrix,
-                null,
-                accelerometerReading,
-                magnetometerReading
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            
+            SensorManager.getRotationMatrix(
+                    rotationMatrix,
+                    null,
+                    accelerometerReading,
+                    magnetometerReading
+            )
 
-        SensorManager.getOrientation(rotationMatrix, orientationAngles)
+            SensorManager.getOrientation(rotationMatrix, orientationAngles)
 
-        mBinding.graph.rotation =  -90f - orientationAngles[0] * (180f/Math.PI).toFloat()
-
+            mBinding.graph.rotation = -90f - orientationAngles[0] * (180f / Math.PI).toFloat()
+        }
         true
     }
 }

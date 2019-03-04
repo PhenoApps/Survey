@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "413273893665",
+    "firebase_url": "https://survey-e0e67.firebaseio.com",
+    "project_id": "survey-e0e67",
+    "storage_bucket": "survey-e0e67.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:413273893665:android:12abccf3f9264d10",
+        "android_client_info": {
+          "package_name": "edu.ksu.wheatgenetics.survey"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "413273893665-0o14ca4k3edirqqjem17qco31eh125br.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB66K2TOWJKH9Q5c4yw2YoXc_YKCGQIOyo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
