@@ -20,6 +20,8 @@ class SatPlotView : View {
 
     private var gsv = ArrayList<NmeaParser.GSV>()
 
+    private var olds = ArrayList<NmeaParser.GSV>()
+
     constructor(context: Context) : super(context) {
         init(context, null)
     }
@@ -66,6 +68,7 @@ class SatPlotView : View {
         canvas.drawText("45", cx + 45f * (radius/90.0f), cy.toFloat(), black)
         canvas.drawText("60", cx + 60f * (radius/90.0f), cy.toFloat(), black)
 
+        canvas.drawText("N", cx + 90f * (radius/90.0f), cy.toFloat(), black)
         for (i in 0 until radius step (radius / 90.0).toInt()) {
             if (i % 45 == 0) {
                 canvas.drawCircle(cx.toFloat(), cy.toFloat(), i.toFloat(), black)
@@ -90,6 +93,14 @@ class SatPlotView : View {
                     //canvas.drawText("(${it.elevationDeg},${it.azimuthDeg})", cx.toFloat() + (radius/90.0).toFloat() * x, cy.toFloat(), black)
                 }
             }
+           /* this.olds.forEach {
+                if (it.azimuthDeg.toFloat() == i.toFloat()) {
+                    val x = it.elevationDeg.toFloat()
+                    canvas.drawCircle(cx.toFloat() + (radius/90.0).toFloat() * x, cy.toFloat(), 15f,
+                            red)
+                    //canvas.drawText("(${it.elevationDeg},${it.azimuthDeg})", cx.toFloat() + (radius/90.0).toFloat() * x, cy.toFloat(), black)
+                }
+            }*/
 
             canvas.restore()
         }
@@ -97,7 +108,10 @@ class SatPlotView : View {
     }
 
     internal fun subscribe(gsv: ArrayList<NmeaParser.GSV>) {
-            this.gsv = gsv
+        (this.gsv - gsv).forEach {
+            if (!olds.contains(it)) olds.add(it)
+        }
+        this.gsv = gsv
         this.invalidate()
     }
 }

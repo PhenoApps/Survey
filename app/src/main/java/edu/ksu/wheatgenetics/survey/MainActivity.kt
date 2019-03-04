@@ -97,6 +97,9 @@ class MainActivity : AppCompatActivity() {
 
         mNavController = Navigation.findNavController(this, R.id.experiment_nav_fragment)
 
+        val toolbar = binding.toolbar
+        setSupportActionBar(toolbar)
+
         if (isExternalStorageWritable()) {
             mSurveyDirectory = File(Environment.getExternalStorageDirectory().path + "/Survey")
             if (!mSurveyDirectory.isDirectory) {
