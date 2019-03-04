@@ -64,7 +64,7 @@ class SatViewFragment: Fragment(), SensorEventListener {
 
                     if (intent.hasExtra(GeoNavService.GNSS_EXTRA)) {
                         parser.parse(intent
-                                .getStringExtra(GeoNavService.BROADCAST_NMEA))
+                                .getStringExtra(GeoNavService.GNSS_EXTRA))
                         /*Log.d("NMEA", intent
                                 .getStringExtra(GeoNavService.PLOT_ID))*/
 
@@ -110,7 +110,7 @@ class SatViewFragment: Fragment(), SensorEventListener {
         mBinding.graph.subscribe(parser.gsv)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            
+
             SensorManager.getRotationMatrix(
                     rotationMatrix,
                     null,
