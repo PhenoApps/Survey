@@ -18,6 +18,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.analytics.FirebaseAnalytics
 import edu.ksu.wheatgenetics.survey.GeoNavService
 import edu.ksu.wheatgenetics.survey.NmeaParser
 import edu.ksu.wheatgenetics.survey.R

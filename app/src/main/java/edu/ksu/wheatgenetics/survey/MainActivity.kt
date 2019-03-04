@@ -19,8 +19,10 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.google.android.material.navigation.NavigationView
+import com.google.firebase.analytics.FirebaseAnalytics
 import edu.ksu.wheatgenetics.survey.databinding.ActivityMainBinding
 import java.io.File
+import java.text.SimpleDateFormat
 
 //The purpose of this class is to allow the user to choose an experiment ID to continue/start surveying on
 //Experiment Activity
@@ -50,10 +52,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-
-        if (isFineLocationAccessible()) {
-            setupLocationUpdates()
-        }
 
         mDrawerToggle = object : ActionBarDrawerToggle(this, mDrawerLayout,
                 R.string.drawer_open, R.string.drawer_close) {
@@ -90,6 +88,14 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
+        FirebaseAnalytics.getInstance(this)
+                .logEvent(FirebaseAnalytics.Event.APP_OPEN,
+                        Bundle().apply {
+                            putString(FirebaseAnalytics.Param.TERM, "HELLO")
+                        })
+
+
+
         val binding: ActivityMainBinding = DataBindingUtil.setContentView(this,
                 R.layout.activity_main)
 
@@ -99,7 +105,12 @@ class MainActivity : AppCompatActivity() {
 
         val toolbar = binding.toolbar
         setSupportActionBar(toolbar)
+        
+        if (isFineLocationAccessible()) {
+            setupLocationUpdates()
+        }
 
+        //TODO check external storage permissions in setupLocationUpdates
         if (isExternalStorageWritable()) {
             mSurveyDirectory = File(Environment.getExternalStorageDirectory().path + "/Survey")
             if (!mSurveyDirectory.isDirectory) {
