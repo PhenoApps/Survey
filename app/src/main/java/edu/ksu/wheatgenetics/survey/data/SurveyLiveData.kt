@@ -10,6 +10,8 @@ import android.os.Build
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.LiveData
+import java.util.*
+import kotlin.concurrent.fixedRateTimer
 
 
 internal class SurveyLiveData(val context: Context) : LiveData<SurveyData>(), LocationListener {
@@ -45,12 +47,10 @@ internal class SurveyLiveData(val context: Context) : LiveData<SurveyData>(), Lo
 
     override fun onLocationChanged(location: Location) {
 
-        //check if accuracy is below the maximum requested accuracy
-        if (location.hasAccuracy() && location.accuracy <= mMaxAccuracy) {
-            surveyData.lat = location.latitude
-            surveyData.lng = location.longitude
-            postValue(surveyData)
-        }
+        surveyData.lat = location.latitude
+        surveyData.lng = location.longitude
+        postValue(surveyData)
+
     }
 
     override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {

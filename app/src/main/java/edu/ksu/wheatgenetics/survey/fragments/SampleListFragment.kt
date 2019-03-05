@@ -70,28 +70,26 @@ class SampleListFragment: Fragment() {
                 }).get(SurveyDataViewModel::class.java).apply {
             data.observe(viewLifecycleOwner,
             Observer { data ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    data.nmea?.let {
-                        try {
-                            parser.parse(it)
-                            mBinding.latTextView.text = parser.latitude
-                            mBinding.lngTextView.text = parser.longitude
-                            mBinding.accTextView.text = parser.fix
-                            mBinding.spdTextView.text = parser.speed
-                            mBinding.utcTextView.text = parser.utc
-                            mBinding.brgTextView.text = parser.bearing
-                            if (parser.satellites.isEmpty()) {
-                                mBinding.satTextView.text = "${parser.gsv.size}"
-                            } else {
-                                val maxSats = maxOf(parser.satellites.toInt(), parser.gsv.size)
-                                mBinding.satTextView.text = "${parser.gsv.size}/$maxSats"
-                            }
-                            mBinding.altTextView.text = parser.altitude
-                        } catch (e: Exception) {
-                            mFirebaseAnalytics.logEvent("PARSERERROR", Bundle().apply {
-                                putString("ERROR", e.stackTrace.toString())
-                            })
+                if ((data.nmea ?: "").isNotBlank() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    try {
+                        parser.parse(data.nmea ?: "")
+                        mBinding.latTextView.text = parser.latitude
+                        mBinding.lngTextView.text = parser.longitude
+                        mBinding.accTextView.text = parser.fix
+                        mBinding.spdTextView.text = parser.speed
+                        mBinding.utcTextView.text = parser.utc
+                        mBinding.brgTextView.text = parser.bearing
+                        if (parser.satellites.isEmpty()) {
+                            mBinding.satTextView.text = "${parser.gsv.size}"
+                        } else {
+                            val maxSats = maxOf(parser.satellites.toInt(), parser.gsv.size)
+                            mBinding.satTextView.text = "${parser.gsv.size}/$maxSats"
                         }
+                        mBinding.altTextView.text = parser.altitude
+                    } catch (e: Exception) {
+                        mFirebaseAnalytics.logEvent("PARSERERROR", Bundle().apply {
+                            putString("ERROR", e.stackTrace.toString())
+                        })
                     }
                 } else {
                     mBinding.latTextView.text = data.lat.toString()
