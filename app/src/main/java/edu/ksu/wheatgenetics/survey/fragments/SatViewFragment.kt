@@ -50,7 +50,6 @@ class SatViewFragment: Fragment(), SensorEventListener {
     private lateinit var mBinding: FragmentSatellitePlotBinding
 
     private lateinit var sensorManager: SensorManager
-    private lateinit var sensor: Sensor
 
     private var parser = NmeaParser()
 
@@ -59,9 +58,6 @@ class SatViewFragment: Fragment(), SensorEventListener {
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-
-        sensorManager = requireContext().getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
 
         val lbm = LocalBroadcastManager.getInstance(requireContext()).apply {
             registerReceiver(object : BroadcastReceiver() {
@@ -82,7 +78,7 @@ class SatViewFragment: Fragment(), SensorEventListener {
         fixedRateTimer("GNSSUpdates", false, 0, 75) {
             handler.obtainMessage().sendToTarget()
         }
-        
+
         mBinding = FragmentSatellitePlotBinding.inflate(inflater, container, false)
 
         return mBinding.root
@@ -92,6 +88,8 @@ class SatViewFragment: Fragment(), SensorEventListener {
         super.onResume()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+
+            sensorManager = requireContext().getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
             arrayOf(Sensor.TYPE_ACCELEROMETER, Sensor.TYPE_MAGNETIC_FIELD).forEach { type ->
                 sensorManager.getDefaultSensor(type)?.also {
@@ -107,7 +105,9 @@ class SatViewFragment: Fragment(), SensorEventListener {
 
     override fun onPause() {
         super.onPause()
-        sensorManager.unregisterListener(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            sensorManager.unregisterListener(this)
+        }
     }
 
     private val handler = Handler {

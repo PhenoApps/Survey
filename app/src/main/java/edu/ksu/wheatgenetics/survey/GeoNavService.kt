@@ -1,6 +1,7 @@
 package edu.ksu.wheatgenetics.survey
 
 import android.Manifest
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
@@ -56,21 +57,24 @@ class GeoNavService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val channel = "survey_foreground_channel"
-        val notification = NotificationCompat.Builder(this, channel)
-                .setSmallIcon(R.drawable.ic_satellite_variant)
-                .setContentTitle("Survey")
-                .setContentText("Survey GPS Running").build()
-        if (android.os.Build.VERSION.SDK_INT >= 28) {
-            val nc = NotificationChannel(channel,
-                    "Channel for Survey Lat/Lng Coordinates",
-                    NotificationManager.IMPORTANCE_LOW).apply {
-                enableVibration(false)
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
+            val channel = "edu.ksu.wheatgenetics.survey"
+            val notification = NotificationCompat.Builder(this, channel)
+                    .setSmallIcon(R.drawable.ic_satellite_variant)
+                    .setContentTitle("Survey")
+                    .setContentText("Survey GPS Running").build()
+            if (android.os.Build.VERSION.SDK_INT >= 28) {
+                val nc = NotificationChannel(channel,
+                        "Channel for Survey Lat/Lng Coordinates",
+                        NotificationManager.IMPORTANCE_LOW).apply {
+                    enableVibration(false)
+                }
+                (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+                        .createNotificationChannel(nc)
             }
-            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
-                    .createNotificationChannel(nc)
-        }
-        startForeground(1, notification)
+            startForeground(2, notification)
+        } else startForeground(1, Notification())
+
         return super.onStartCommand(intent, flags, startId)
     }
 

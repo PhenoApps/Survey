@@ -8,7 +8,7 @@
             <LayoutPositions>
               <option name="myPositions">
                 <map>
-                  <entry key="action_plot_sats">
+                  <entry key="action_global_satellite_plot_fragment">
                     <value>
                       <LayoutPositions />
                     </value>
@@ -18,8 +18,8 @@
                       <LayoutPositions>
                         <option name="myPosition">
                           <Point>
-                            <option name="x" value="-548" />
-                            <option name="y" value="61" />
+                            <option name="x" value="168" />
+                            <option name="y" value="54" />
                           </Point>
                         </option>
                         <option name="myPositions">
@@ -39,8 +39,8 @@
                       <LayoutPositions>
                         <option name="myPosition">
                           <Point>
-                            <option name="x" value="159" />
-                            <option name="y" value="-453" />
+                            <option name="x" value="550" />
+                            <option name="y" value="412" />
                           </Point>
                         </option>
                       </LayoutPositions>
@@ -51,8 +51,8 @@
                       <LayoutPositions>
                         <option name="myPosition">
                           <Point>
-                            <option name="x" value="371" />
-                            <option name="y" value="199" />
+                            <option name="x" value="656" />
+                            <option name="y" value="12" />
                           </Point>
                         </option>
                       </LayoutPositions>
@@ -63,13 +63,13 @@
                       <LayoutPositions>
                         <option name="myPosition">
                           <Point>
-                            <option name="x" value="-59" />
-                            <option name="y" value="46" />
+                            <option name="x" value="412" />
+                            <option name="y" value="54" />
                           </Point>
                         </option>
                         <option name="myPositions">
                           <map>
-                            <entry key="action_sample_list_fragment_to_map_fragment">
+                            <entry key="action_map_locations">
                               <value>
                                 <LayoutPositions />
                               </value>
@@ -89,9 +89,18 @@
                       <LayoutPositions>
                         <option name="myPosition">
                           <Point>
-                            <option name="x" value="-408" />
-                            <option name="y" value="-609" />
+                            <option name="x" value="-73" />
+                            <option name="y" value="342" />
                           </Point>
+                        </option>
+                        <option name="myPositions">
+                          <map>
+                            <entry key="action_satellite_plot_fragment_pop">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                          </map>
                         </option>
                       </LayoutPositions>
                     </value>
