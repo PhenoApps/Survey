@@ -1,33 +1,27 @@
 package edu.ksu.wheatgenetics.survey.fragments
 
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
 import android.hardware.*
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.Animation
-import android.view.animation.BounceInterpolator
-import android.view.animation.LinearInterpolator
-import android.view.animation.RotateAnimation
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.navigation.Navigation
-import androidx.navigation.fragment.findNavController
-import com.google.android.material.navigation.NavigationView
-import edu.ksu.wheatgenetics.survey.GeoNavService
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
+import com.google.firebase.analytics.FirebaseAnalytics
 import edu.ksu.wheatgenetics.survey.NmeaParser
-import edu.ksu.wheatgenetics.survey.R
 import edu.ksu.wheatgenetics.survey.databinding.FragmentSatellitePlotBinding
-import kotlinx.android.synthetic.main.activity_main.view.*
-import kotlin.concurrent.fixedRateTimer
+import edu.ksu.wheatgenetics.survey.viewmodels.SurveyDataViewModel
 
 class SatViewFragment: Fragment(), SensorEventListener {
+
+    private val mFirebaseAnalytics by lazy {
+        FirebaseAnalytics.getInstance(requireContext())
+    }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
     }
@@ -38,6 +32,7 @@ class SatViewFragment: Fragment(), SensorEventListener {
         } else if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
             System.arraycopy(event.values, 0, magnetometerReading, 0, magnetometerReading.size)
         }
+        rotateView()
     }
 
     private val accelerometerReading = FloatArray(3)
@@ -59,24 +54,26 @@ class SatViewFragment: Fragment(), SensorEventListener {
             savedInstanceState: Bundle?
     ): View? {
 
-        val lbm = LocalBroadcastManager.getInstance(requireContext()).apply {
-            registerReceiver(object : BroadcastReceiver() {
-
-                override fun onReceive(context: Context, intent: Intent) {
-
-                    if (intent.hasExtra(GeoNavService.GNSS_EXTRA)) {
-                        parser.parse(intent
-                                .getStringExtra(GeoNavService.GNSS_EXTRA))
-                        /*Log.d("NMEA", intent
-                                .getStringExtra(GeoNavService.PLOT_ID))*/
-
+        ViewModelProviders.of(this,
+                object : ViewModelProvider.NewInstanceFactory() {
+                    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+                        return SurveyDataViewModel(requireContext()) as T
                     }
-                }
-            }, GeoNavService.filter)
-        }
+                }).get(SurveyDataViewModel::class.java).apply {
+            data.observe(viewLifecycleOwner,
+                    Observer { data ->
+                        data.nmea?.let {
+                            try {
+                                parser.parse(it)
+                                mBinding.graph.subscribe(parser.gsv)
 
-        fixedRateTimer("GNSSUpdates", false, 0, 75) {
-            handler.obtainMessage().sendToTarget()
+                            } catch (e: Exception) {
+                                mFirebaseAnalytics.logEvent("PARSERERROR", Bundle().apply {
+                                    putString("ERROR", e.stackTrace.toString())
+                                })
+                            }
+                        }
+                    })
         }
 
         mBinding = FragmentSatellitePlotBinding.inflate(inflater, container, false)
@@ -103,17 +100,7 @@ class SatViewFragment: Fragment(), SensorEventListener {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            sensorManager.unregisterListener(this)
-        }
-    }
-
-    private val handler = Handler {
-
-        mBinding.graph.subscribe(parser.gsv)
-
+    fun rotateView() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 
             SensorManager.getRotationMatrix(
@@ -127,6 +114,12 @@ class SatViewFragment: Fragment(), SensorEventListener {
 
             mBinding.graph.rotation = -90f - orientationAngles[0] * (180f / Math.PI).toFloat()
         }
-        true
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            sensorManager.unregisterListener(this)
+        }
     }
 }

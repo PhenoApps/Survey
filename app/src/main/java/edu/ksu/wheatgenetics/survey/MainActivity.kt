@@ -81,8 +81,10 @@ class MainActivity : AppCompatActivity() {
 
         mBinding.nvView.setupWithNavController(navControl)
 
-        if (isFineLocationAccessible()) {
-            setupLocationUpdates()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE), REQ_FINE_LOCATION)
         }
 
         /*TODO check external storage permissions when exporting file
@@ -99,7 +101,6 @@ class MainActivity : AppCompatActivity() {
             when {
                 perm == Manifest.permission.ACCESS_FINE_LOCATION
                         && granted[index] == PackageManager.PERMISSION_GRANTED -> {
-                    setupLocationUpdates()
                 }
                 perm == Manifest.permission.WRITE_EXTERNAL_STORAGE
                         && granted[index] == PackageManager.PERMISSION_GRANTED -> {
@@ -109,30 +110,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    //stop the geo nav service
-    override fun onStop() {
-        super.onStop()
-        val geoNavServiceIntent = Intent(this, GeoNavService::class.java)
-        stopService(geoNavServiceIntent)
-    }
-
     override fun onSupportNavigateUp() =
         navControl.navigateUp(appBarConfig) ||
                 super.onSupportNavigateUp()
-
-    private fun setupLocationUpdates() {
-        val geoNavServiceIntent = Intent(this, GeoNavService::class.java)
-        ContextCompat.startForegroundService(this, geoNavServiceIntent)
-    }
-
-    private fun isFineLocationAccessible(): Boolean {
-        if (PermissionChecker.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) return true
-        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQ_FINE_LOCATION)
-        }
-        return false
-    }
 
     internal companion object {
         const val packageName = "org.phenoapps.wheatgenetics.survey"

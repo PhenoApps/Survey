@@ -1,11 +1,7 @@
 package edu.ksu.wheatgenetics.survey.fragments
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import android.text.InputType
 import android.view.*
 import android.widget.EditText
@@ -15,13 +11,10 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.onNavDestinationSelected
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.crash.FirebaseCrash
-import edu.ksu.wheatgenetics.survey.GeoNavService
 import edu.ksu.wheatgenetics.survey.NmeaParser
 import edu.ksu.wheatgenetics.survey.R
 import edu.ksu.wheatgenetics.survey.adapters.SampleAdapter
@@ -31,7 +24,7 @@ import edu.ksu.wheatgenetics.survey.data.SampleRepository
 import edu.ksu.wheatgenetics.survey.data.SurveyDatabase
 import edu.ksu.wheatgenetics.survey.databinding.FragmentListSampleBinding
 import edu.ksu.wheatgenetics.survey.viewmodels.SampleListViewModel
-import kotlin.concurrent.fixedRateTimer
+import edu.ksu.wheatgenetics.survey.viewmodels.SurveyDataViewModel
 
 class SampleListFragment: Fragment() {
 
@@ -48,8 +41,6 @@ class SampleListFragment: Fragment() {
 
     private var parser = NmeaParser()
 
-    private lateinit var mLastLocation: DoubleArray
-
     private lateinit var mAdapter: SampleAdapter
 
     override fun onCreateView(
@@ -62,40 +53,53 @@ class SampleListFragment: Fragment() {
 
         parser = NmeaParser()
 
-        val lbm = LocalBroadcastManager.getInstance(requireContext()).apply {
-            registerReceiver(object : BroadcastReceiver() {
+        mExperiment = SampleListFragmentArgs.fromBundle(arguments!!).experiment
 
-                override fun onReceive(context: Context, intent: Intent) {
+        mBinding = edu.ksu.wheatgenetics.survey.databinding.FragmentListSampleBinding
+                .inflate(inflater, container, false)
 
-                    if (intent.hasExtra(GeoNavService.GNSS_EXTRA)) {
+        mAdapter = SampleAdapter(mBinding.root.context)
+
+        mBinding.recyclerView.adapter = mAdapter
+
+        ViewModelProviders.of(this,
+                object : ViewModelProvider.NewInstanceFactory() {
+                    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+                        return SurveyDataViewModel(requireContext()) as T
+                    }
+                }).get(SurveyDataViewModel::class.java).apply {
+            data.observe(viewLifecycleOwner,
+            Observer { data ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    data.nmea?.let {
                         try {
-                            parser.parse(intent
-                                    .getStringExtra(GeoNavService.GNSS_EXTRA))
+                            parser.parse(it)
+                            mBinding.latTextView.text = parser.latitude
+                            mBinding.lngTextView.text = parser.longitude
+                            mBinding.accTextView.text = parser.fix
+                            mBinding.spdTextView.text = parser.speed
+                            mBinding.utcTextView.text = parser.utc
+                            mBinding.brgTextView.text = parser.bearing
+                            if (parser.satellites.isEmpty()) {
+                                mBinding.satTextView.text = "${parser.gsv.size}"
+                            } else {
+                                val maxSats = maxOf(parser.satellites.toInt(), parser.gsv.size)
+                                mBinding.satTextView.text = "${parser.gsv.size}/$maxSats"
+                            }
+                            mBinding.altTextView.text = parser.altitude
                         } catch (e: Exception) {
                             mFirebaseAnalytics.logEvent("PARSERERROR", Bundle().apply {
                                 putString("ERROR", e.stackTrace.toString())
                             })
                         }
-                    } else if (intent.hasExtra(GeoNavService.LOCATION_EXTRA)) {
-                        mLastLocation = intent.getDoubleArrayExtra(GeoNavService.LOCATION_EXTRA)
                     }
+                } else {
+                    mBinding.latTextView.text = data.lat.toString()
+                    mBinding.lngTextView.text = data.lng.toString()
+                    mBinding.accTextView.text = "GPS or Net"
                 }
-            }, GeoNavService.filter)
+            })
         }
-
-        fixedRateTimer("GNSSUpdates", false, 0, 1) {
-            handler.obtainMessage().sendToTarget()
-        }
-
-        mExperiment = SampleListFragmentArgs.fromBundle(arguments!!).experiment
-        mBinding = edu.ksu.wheatgenetics.survey.databinding.FragmentListSampleBinding
-                .inflate(inflater, container, false)
-
-
-
-        mAdapter = SampleAdapter(mBinding.root.context)
-
-        mBinding.recyclerView.adapter = mAdapter
 
         mViewModel = ViewModelProviders.of(this,
             object : ViewModelProvider.NewInstanceFactory() {
@@ -161,32 +165,5 @@ class SampleListFragment: Fragment() {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.activity_main_toolbar, menu)
-    }
-
-    private val handler = Handler {
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            mBinding.latTextView.text = parser.latitude
-            mBinding.lngTextView.text = parser.longitude
-            mBinding.accTextView.text = parser.fix
-            mBinding.spdTextView.text = parser.speed
-            mBinding.utcTextView.text = parser.utc
-            mBinding.brgTextView.text = parser.bearing
-            if (parser.satellites.isEmpty()) {
-                mBinding.satTextView.text = "${parser.gsv.size}"
-            } else {
-                val maxSats = maxOf(parser.satellites.toInt(), parser.gsv.size)
-                mBinding.satTextView.text = "${parser.gsv.size}/$maxSats"
-            }
-            mBinding.altTextView.text = parser.altitude
-        } else {
-            mLastLocation?.let {
-                mBinding.latTextView.text = it[0].toString()
-                mBinding.lngTextView.text = it[1].toString()
-                mBinding.accTextView.text = "GPS or Net"
-            }
-        }
-
-         true
     }
 }
