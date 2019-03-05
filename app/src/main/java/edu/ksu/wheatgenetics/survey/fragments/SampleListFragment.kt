@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.onNavDestinationSelected
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crash.FirebaseCrash
@@ -82,9 +83,6 @@ class SampleListFragment: Fragment() {
             }, GeoNavService.filter)
         }
 
-        //if arguments is null we don't have an experiment id and must return immediately
-        //arguments ?: findNavController().popBackStack()
-
         fixedRateTimer("GNSSUpdates", false, 0, 1) {
             handler.obtainMessage().sendToTarget()
         }
@@ -92,6 +90,8 @@ class SampleListFragment: Fragment() {
         mExperiment = SampleListFragmentArgs.fromBundle(arguments!!).experiment
         mBinding = edu.ksu.wheatgenetics.survey.databinding.FragmentListSampleBinding
                 .inflate(inflater, container, false)
+
+
 
         mAdapter = SampleAdapter(mBinding.root.context)
 
@@ -147,11 +147,20 @@ class SampleListFragment: Fragment() {
         return mBinding.root
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId) {
+            R.id.action_map_locations -> {
+                findNavController().navigate(
+                        SampleListFragmentDirections.actionMapLocations(mExperiment))
+                true
+            }
+            else -> item.onNavDestinationSelected(findNavController())
+                    || super.onOptionsItemSelected(item)
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-
         inflater.inflate(R.menu.activity_main_toolbar, menu)
-
-       // return super.onCreateOptionsMenu(menu, inflater)
     }
 
     private val handler = Handler {

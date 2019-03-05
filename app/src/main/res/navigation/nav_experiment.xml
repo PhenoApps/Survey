@@ -6,12 +6,6 @@
     android:id="@+id/main_navigation"
     app:startDestination="@+id/experiment_fragment">
 
-    <action android:id="@+id/action_plot_sats" app:destination="@+id/satellite_plot_fragment"
-        app:enterAnim="@anim/slide_in_right"
-        app:exitAnim="@anim/slide_out_left"
-        app:popEnterAnim="@anim/slide_in_left"
-        app:popExitAnim="@anim/slide_out_right"/>
-
     <fragment
         android:id="@+id/experiment_fragment"
         android:name="edu.ksu.wheatgenetics.survey.fragments.ExperimentListFragment"
@@ -32,7 +26,12 @@
         android:id="@+id/satellite_plot_fragment"
         android:name="edu.ksu.wheatgenetics.survey.fragments.SatViewFragment"
         android:label="Satellite Plot"
-        tools:layout="@layout/fragment_satellite_plot"/>
+        tools:layout="@layout/fragment_satellite_plot">
+        <action
+            android:id="@+id/action_satellite_plot_fragment_pop"
+            app:popUpTo="@id/sample_list_fragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 
     <fragment
         android:id="@+id/sample_list_fragment"
@@ -54,7 +53,12 @@
 
         <action
             android:id="@+id/action_map_locations"
-            app:destination="@id/fragment_map"/>
+            app:destination="@id/fragment_map"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"
+            app:popUpTo="@+id/sample_list_fragment" />
 
     </fragment>
 
@@ -74,5 +78,14 @@
         android:label="Sample"
         tools:layout="@layout/fragment_sample">
     </fragment>
+    <action
+        android:id="@+id/action_global_satellite_plot_fragment"
+        app:destination="@id/satellite_plot_fragment"
+        app:enterAnim="@anim/nav_default_enter_anim"
+        app:exitAnim="@anim/nav_default_exit_anim"
+        app:launchSingleTop="true"
+        app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+        app:popExitAnim="@anim/nav_default_pop_exit_anim"
+        app:popUpTo="@+id/sample_list_fragment" />
 </navigation>
 

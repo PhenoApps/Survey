@@ -18,10 +18,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.onNavDestinationSelected
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
+import androidx.navigation.ui.*
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.analytics.FirebaseAnalytics
 import edu.ksu.wheatgenetics.survey.databinding.ActivityMainBinding
@@ -30,6 +27,9 @@ import java.text.SimpleDateFormat
 
 //The purpose of this class is to allow the user to choose an experiment ID to continue/start surveying on
 //Experiment Activity
+//Using the 'One-Activity' philosophy, this activity controls all the global
+//destinations s.a toolbar events and drawer navigation
+//Fragments opened through the drawer will have this activity's fragment as a parent.
 class MainActivity : AppCompatActivity() {
 
     private val mFirebaseAnalytics by lazy {
@@ -38,7 +38,13 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var mBinding: ActivityMainBinding
 
-    private lateinit var mNavController: NavController
+    private val navControl by lazy {
+        Navigation.findNavController(this, R.id.experiment_nav_fragment)
+    }
+
+    private val appBarConfig by lazy {
+        AppBarConfiguration(navControl.graph, mBinding.drawerLayout)
+    }
 
     //location to save Survey data s.a exporting lat/lng .csv
     private lateinit var mSurveyDirectory: File
@@ -57,40 +63,23 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
-    override fun onStart() {
-        super.onStart()
-
-        mBinding = DataBindingUtil.setContentView(this,
-                R.layout.activity_main)
-
-        mNavController = Navigation.findNavController(this, R.id.experiment_nav_fragment)
-
-        val appBarConfig = AppBarConfiguration(mNavController.graph)
-
-        setSupportActionBar(mBinding.toolbar)
-
-        setupActionBarWithNavController(mNavController, appBarConfig)
-
-        mBinding.nvView.setupWithNavController(mNavController)
-
-        supportActionBar.apply {
-            title = "Survey"
-            this?.let {
-                it.themedContext
-                //setDisplayHomeAsUpEnabled(true)
-                //setHomeButtonEnabled(true)
-            }
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
 
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.APP_OPEN,
-                    Bundle().apply {
-                        putString(FirebaseAnalytics.Param.TERM, "HELLO")
-                    })
+                Bundle().apply {
+                    putString(FirebaseAnalytics.Param.TERM, "HELLO")
+                })
+
+        mBinding = DataBindingUtil.setContentView(this,
+                R.layout.activity_main)
+
+        setSupportActionBar(mBinding.toolbar)
+
+        setupActionBarWithNavController(navControl, appBarConfig)
+
+        mBinding.nvView.setupWithNavController(navControl)
 
         if (isFineLocationAccessible()) {
             setupLocationUpdates()
@@ -104,11 +93,6 @@ class MainActivity : AppCompatActivity() {
             }
         }*/
     }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return item.onNavDestinationSelected(mNavController) || super.onOptionsItemSelected(item)
-    }
-
 
     override fun onRequestPermissionsResult(resultCode: Int, permissions: Array<String>, granted: IntArray) {
         permissions.forEachIndexed { index, perm ->
@@ -133,7 +117,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp() =
-        mNavController.navigateUp()
+        navControl.navigateUp(appBarConfig) ||
+                super.onSupportNavigateUp()
 
     private fun setupLocationUpdates() {
         val geoNavServiceIntent = Intent(this, GeoNavService::class.java)

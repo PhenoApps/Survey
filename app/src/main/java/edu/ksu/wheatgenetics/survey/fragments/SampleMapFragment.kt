@@ -165,9 +165,6 @@ class SampleMapFragment: Fragment(), OnMapReadyCallback {
             savedInstanceState: Bundle?
     ): View? {
 
-        //if arguments is null we don't have an experiment id and must return immediately
-        arguments ?: findNavController().popBackStack()
-
         val experiment = SampleMapFragmentArgs.fromBundle(arguments!!).experiment
         mBinding = edu.ksu.wheatgenetics.survey.databinding.FragmentMapPlotsBinding
                 .inflate(inflater, container, false)

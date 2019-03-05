@@ -14,11 +14,17 @@ import android.view.animation.Animation
 import android.view.animation.BounceInterpolator
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.navigation.Navigation
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.navigation.NavigationView
 import edu.ksu.wheatgenetics.survey.GeoNavService
 import edu.ksu.wheatgenetics.survey.NmeaParser
+import edu.ksu.wheatgenetics.survey.R
 import edu.ksu.wheatgenetics.survey.databinding.FragmentSatellitePlotBinding
+import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlin.concurrent.fixedRateTimer
 
 class SatViewFragment: Fragment(), SensorEventListener {
@@ -76,8 +82,7 @@ class SatViewFragment: Fragment(), SensorEventListener {
         fixedRateTimer("GNSSUpdates", false, 0, 75) {
             handler.obtainMessage().sendToTarget()
         }
-
-
+        
         mBinding = FragmentSatellitePlotBinding.inflate(inflater, container, false)
 
         return mBinding.root
