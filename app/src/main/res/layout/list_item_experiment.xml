@@ -6,7 +6,7 @@
             type="android.view.View.OnClickListener"/>
         <variable
             name="viewModel"
-            type="edu.ksu.wheatgenetics.survey.viewmodels.ExperimentViewModel"/>
+            type="org.phenoapps.survey.viewmodels.ExperimentViewModel"/>
     </data>
 
     <LinearLayout
@@ -43,7 +43,8 @@
             android:text="@{viewModel.name}"
             android:textAlignment="textStart"
             android:textSize="24sp"
-            android:typeface="monospace" />
+            android:typeface="monospace"
+            android:gravity="start" />
 
         <TextView
             android:id="@+id/samples_count"
@@ -55,7 +56,8 @@
             android:text="@{String.valueOf(viewModel.count)}"
             android:textAlignment="textEnd"
             android:textSize="24sp"
-            android:typeface="monospace" />
+            android:typeface="monospace"
+            android:gravity="end" />
     </LinearLayout>
 
 

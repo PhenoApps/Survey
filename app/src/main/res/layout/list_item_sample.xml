@@ -7,7 +7,7 @@
             type="android.view.View.OnClickListener"/>
         <variable
             name="viewModel"
-            type="edu.ksu.wheatgenetics.survey.viewmodels.SampleViewModel"/>
+            type="org.phenoapps.survey.viewmodels.SampleViewModel"/>
     </data>
 
     <TextView
