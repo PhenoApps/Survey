@@ -44,7 +44,9 @@ class SatViewFragment: Fragment(), SensorEventListener {
     //a data binding class that contains the layout views
     private lateinit var mBinding: FragmentSatellitePlotBinding
 
-    private lateinit var sensorManager: SensorManager
+    private val sensorManager by lazy {
+        requireContext().getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    }
 
     private var parser = NmeaParser()
 
@@ -85,8 +87,6 @@ class SatViewFragment: Fragment(), SensorEventListener {
         super.onResume()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-
-            sensorManager = requireContext().getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
             arrayOf(Sensor.TYPE_ACCELEROMETER, Sensor.TYPE_MAGNETIC_FIELD).forEach { type ->
                 sensorManager.getDefaultSensor(type)?.also {
