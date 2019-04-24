@@ -25,6 +25,24 @@ import org.phenoapps.survey.data.SurveyDatabase
 import org.phenoapps.survey.databinding.FragmentListSampleBinding
 import org.phenoapps.survey.viewmodels.SampleListViewModel
 import org.phenoapps.survey.viewmodels.SurveyDataViewModel
+import android.R.attr.start
+import android.bluetooth.BluetoothAdapter
+import android.content.DialogInterface
+import android.widget.AbsListView.CHOICE_MODE_SINGLE
+import org.phenoapps.survey.MainActivity
+import android.bluetooth.BluetoothDevice
+import android.widget.ArrayAdapter
+import android.widget.ListView
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import android.R.attr.start
+import android.R.string.cancel
+import android.bluetooth.BluetoothSocket
+import android.util.Log
+import kotlinx.android.synthetic.main.row.view.*
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+
 
 class SampleListFragment: Fragment() {
 
@@ -38,6 +56,11 @@ class SampleListFragment: Fragment() {
     private lateinit var mBinding: FragmentListSampleBinding
 
     private lateinit var mExperiment: Experiment
+
+    private lateinit var mBluetoothAdapter: BluetoothAdapter
+    private lateinit var mBluetoothDevice: BluetoothDevice
+    private lateinit var mBroadcastManager: LocalBroadcastManager
+    private lateinit var mConnectedThread: ConnectedThread
 
     private var parser = NmeaParser()
 
@@ -151,9 +174,13 @@ class SampleListFragment: Fragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when(item.itemId) {
-            R.id.action_map_locations -> {
+            org.phenoapps.survey.R.id.action_map_locations -> {
                 findNavController().navigate(
                         SampleListFragmentDirections.actionMapLocations(mExperiment))
+                true
+            }
+            org.phenoapps.survey.R.id.action_connect_bluetooth -> {
+                findPairedBTDevice()
                 true
             }
             else -> item.onNavDestinationSelected(findNavController())
@@ -162,6 +189,134 @@ class SampleListFragment: Fragment() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.activity_main_toolbar, menu)
+        inflater.inflate(org.phenoapps.survey.R.menu.activity_main_toolbar, menu)
     }
+
+    private fun findPairedBTDevice() {
+
+        if (mBluetoothAdapter != null) {
+
+            val pairedDevices = mBluetoothAdapter.getBondedDevices()
+            if (!pairedDevices.isEmpty()) {
+                val bluetoothMap = HashMap<String, BluetoothDevice>()
+                val bluetoothDevicesAdapter = ArrayAdapter<String>(requireContext(), org.phenoapps.survey.R.layout.row)
+                for (bd in pairedDevices) {
+                    bluetoothMap.put(bd.getName(), bd)
+                    bluetoothDevicesAdapter.add(bd.getName())
+                }
+
+                val builder = AlertDialog.Builder(requireContext())
+                builder.setTitle("Choose your paired bluetooth device.")
+                val devices = ListView(requireContext())
+                devices.setChoiceMode(ListView.CHOICE_MODE_SINGLE)
+                //devices.setSelector(R.drawable.list_selector_focus)
+                devices.setAdapter(bluetoothDevicesAdapter)
+                builder.setView(devices)
+                builder.setPositiveButton("OK") { dialog, which ->
+                    if (devices.getCheckedItemCount() > 0) {
+                        val value = bluetoothDevicesAdapter.getItem(devices.getCheckedItemPosition())
+                        if (value != null) {
+                            mBluetoothDevice = bluetoothMap.get(value)!!
+                            ConnectThread(mBluetoothDevice).start()
+                        }
+                    }
+                }
+
+                builder.show()
+            }
+        }
+
+    }
+
+    private inner class ConnectThread internal constructor(device: BluetoothDevice) : Thread() {
+
+        private val mmSocket: BluetoothSocket?
+
+        init {
+            // Use a temporary object that is later assigned to mmSocket
+            // because mmSocket is final.
+            var tmp: BluetoothSocket? = null
+            mBluetoothDevice = device
+
+            try {
+                tmp = device.createRfcommSocketToServiceRecord(device.uuids[0].uuid)
+            } catch (e: IOException) {
+                Log.e("CONNECT THREAD", "Socket's create() method failed", e)
+            }
+
+            mmSocket = tmp
+        }
+
+        override fun run() {
+
+            try {
+                // Connect to the remote device through the socket. This call blocks
+                // until it succeeds or throws an exception.
+                mmSocket!!.connect()
+            } catch (connectException: IOException) {
+                // Unable to connect; close the socket and return.
+                try {
+                    mmSocket!!.close()
+                } catch (closeException: IOException) {
+                    Log.e("CONNECT THREAD: RUN", "Could not close the client socket", closeException)
+                }
+
+                return
+            }
+
+            // The connection attempt succeeded. Perform work associated with
+            // the connection in a separate thread.
+           // if (mConnectedThread != null && (mConnectedThread.isAlive()
+             //               || mConnectedThread.isDaemon() || mConnectedThread.isInterrupted()))
+                //mConnectedThread.cancel()
+            mConnectedThread = ConnectedThread(mmSocket)
+            mConnectedThread.start()
+
+        }
+
+        // Closes the client socket and causes the thread to finish.
+        fun cancel() {
+            try {
+                mmSocket!!.close()
+            } catch (e: IOException) {
+                Log.e("CONNECT THREAD : CANCEL", "Could not close the client socket", e)
+            }
+
+        }
+    }
+
+    private class ConnectedThread internal constructor(val socket: BluetoothSocket): Thread() {
+
+        private lateinit var mmInStream: InputStream
+        private lateinit var mmOutStream: OutputStream
+        private lateinit var mmBuffer: ByteArray
+
+        init {
+            try {
+                mmInStream = socket.inputStream
+                mmOutStream = socket.outputStream
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+
+        override fun run() {
+
+            mmBuffer = ByteArray(256)
+            var bytes = 0
+            while (true) {
+                try {
+                    mmBuffer[bytes] = mmInStream.read().toByte()
+                    if (bytes > 1 && String(mmBuffer, bytes-1, bytes) == "\r\n") {
+                        val msg = String(mmBuffer, 0, bytes-1)
+                        Log.d("TEST", msg)
+                    }
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+
 }

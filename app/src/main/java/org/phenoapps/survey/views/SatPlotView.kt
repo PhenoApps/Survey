@@ -42,6 +42,8 @@ class SatPlotView : View {
             strokeJoin = Paint.Join.BEVEL
             strokeMiter = 1f
             textSize = 36f
+            isAntiAlias = true
+            isDither = true
         }
         arrayOf(blue, red, green).forEach {
             it.style = Paint.Style.STROKE
@@ -60,32 +62,32 @@ class SatPlotView : View {
         val actualHeight = height - (paddingTop + paddingBottom)
 
         var radius = Math.min(actualWidth, actualHeight) / 2
-        val cx = paddingLeft + actualWidth / 2
-        val cy = paddingTop + actualHeight / 2
+        val cx = (paddingLeft + actualWidth / 2.0).toFloat()
+        val cy = (paddingTop + actualHeight / 2.0).toFloat()
 
-        canvas.drawText("15", cx + 15f * (radius/90.0f), cy.toFloat(), black)
-        canvas.drawText("30", cx + 30f * (radius/90.0f), cy.toFloat(), black)
-        canvas.drawText("45", cx + 45f * (radius/90.0f), cy.toFloat(), black)
-        canvas.drawText("60", cx + 60f * (radius/90.0f), cy.toFloat(), black)
+        val radiusInc = (radius/90.0f)
 
-        canvas.drawText("N", cx + 90f * (radius/90.0f), cy.toFloat(), black)
-        for (i in 0 until radius step (radius / 90.0).toInt()) {
-            if (i % 45 == 0) {
-                canvas.drawCircle(cx.toFloat(), cy.toFloat(), i.toFloat(), black)
-            }
-            //canvas.drawArc(Rect(0,0,usableWidth,usableHeight).toRectF(), 0.0f, 360f, false, paint)
+        canvas.drawText("15", cx + 15f * radiusInc, cy, black)
+        canvas.drawText("30", cx + 30f * radiusInc, cy, black)
+        canvas.drawText("45", cx + 45f * radiusInc, cy, black)
+        canvas.drawText("60", cx + 60f * radiusInc, cy, black)
+
+        var x = 1.0f
+        while (x <= radius) {
+            canvas.drawCircle(cx, cy, x, black)
+            x += radiusInc*4
         }
+
         for (i in 0 until 360 step 1) {
             canvas.save()
-            canvas.rotate(i.toFloat(), cx.toFloat(), cy.toFloat())
+            canvas.rotate(i.toFloat(), cx, cy)
             if (i % 45 == 0) {
-                canvas.drawLine(cx.toFloat(), cy.toFloat(), cx.toFloat() + radius, cy.toFloat(), black)
-                canvas.drawText("$i", cx + radius.toFloat(), cy.toFloat(), black)
+                canvas.drawLine(cx, cy, cx + radius, cy, black)
+                canvas.drawText("$i", cx + radius, cy, black)
             }
             this.gsv.forEach {
                 if (it.azimuthDeg.toFloat() == i.toFloat()) {
-                    val x = it.elevationDeg.toFloat()
-                    canvas.drawCircle(cx.toFloat() + (radius/90.0).toFloat() * x, cy.toFloat(), 15f,
+                    canvas.drawCircle(cx + radiusInc * it.elevationDeg.toFloat(), cy, 15f,
                         when (it.snr.toInt()) {
                             0 -> red
                             in 1..25 -> blue
