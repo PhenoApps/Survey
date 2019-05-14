@@ -1,0 +1,7 @@
+#Tue May 14 15:44:35 CDT 2019
+base.0=C\:\\Users\\Trevor\\Documents\\Android\\Survey\\app\\build\\intermediates\\dex\\debug\\mergeDexDebug\\out
+path.1=classes2.dex
+renamed.1=classes2.dex
+path.0=classes.dex
+renamed.0=classes.dex
+base.1=C\:\\Users\\Trevor\\Documents\\Android\\Survey\\app\\build\\intermediates\\dex\\debug\\mergeDexDebug\\out
