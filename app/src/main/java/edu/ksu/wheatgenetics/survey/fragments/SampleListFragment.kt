@@ -13,6 +13,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.onNavDestinationSelected
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.analytics.FirebaseAnalytics
 import edu.ksu.wheatgenetics.survey.NmeaParser
@@ -109,6 +111,23 @@ class SampleListFragment: Fragment() {
                         ExperimentRepository.getInstance(SurveyDatabase.getInstance(requireContext()).experimentDao())) as T
             }
         }).get(SampleListViewModel::class.java)
+
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+
+                val newList = mAdapter.currentList.toMutableList()
+                newList.removeAt(viewHolder.adapterPosition)
+
+                mViewModel.delete(mAdapter.currentList[viewHolder.adapterPosition])
+
+                mAdapter.submitList(newList)
+            }
+        }).attachToRecyclerView(mBinding.recyclerView)
 
         mViewModel.samples.observe(viewLifecycleOwner, Observer {samples ->
             samples.let {

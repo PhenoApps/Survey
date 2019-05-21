@@ -23,4 +23,7 @@ data class Sample(
 ) {
         @ColumnInfo(name = "id") @PrimaryKey(autoGenerate = true)
         var id = 0
+
+        @ColumnInfo(name = "date")
+        var date = String()
 }

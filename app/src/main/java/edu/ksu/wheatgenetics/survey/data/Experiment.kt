@@ -5,22 +5,28 @@ import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.util.*
 
 @Entity(tableName = "experiments")
 data class Experiment(var name: String, var count: Int = 0): Parcelable {
     @ColumnInfo(name = "id") @PrimaryKey(autoGenerate = true)
     var id: Int = 0
 
+    @ColumnInfo(name = "date")
+    var date: String = String()
+
     constructor(parcel: Parcel) : this(
             parcel.readString(),
             parcel.readInt()) {
         id = parcel.readInt()
+        date = parcel.readString()
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(name)
         parcel.writeInt(count)
         parcel.writeInt(id)
+        parcel.writeString(date)
     }
 
     override fun describeContents(): Int {

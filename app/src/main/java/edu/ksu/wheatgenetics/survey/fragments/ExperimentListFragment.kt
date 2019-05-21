@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.text.InputType
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
@@ -13,12 +14,16 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import edu.ksu.wheatgenetics.survey.adapters.ExperimentAdapter
 import edu.ksu.wheatgenetics.survey.data.ExperimentRepository
 import edu.ksu.wheatgenetics.survey.data.SurveyDatabase
 import edu.ksu.wheatgenetics.survey.databinding.FragmentExperimentBinding
 import edu.ksu.wheatgenetics.survey.viewmodels.ExperimentListViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ExperimentListFragment : Fragment() {
 
@@ -33,6 +38,7 @@ class ExperimentListFragment : Fragment() {
         mBinding = FragmentExperimentBinding
                 .inflate(inflater, container, false)
         val adapter = ExperimentAdapter(mBinding.root.context)
+
         mBinding.recyclerView.adapter = adapter
 
         val viewModel = ViewModelProviders.of(this,
@@ -47,6 +53,22 @@ class ExperimentListFragment : Fragment() {
                 }
         ).get(ExperimentListViewModel::class.java)
 
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+
+                val newList = adapter.currentList.toMutableList()
+                newList.removeAt(viewHolder.adapterPosition)
+
+                viewModel.deleteExperiment(adapter.currentList[viewHolder.adapterPosition])
+
+                adapter.submitList(newList)
+            }
+        }).attachToRecyclerView(mBinding.recyclerView)
 
         mBinding.submitButton.setOnClickListener {
             askUserNewExperimentName(mBinding.root.context, viewModel, it)
@@ -76,7 +98,9 @@ class ExperimentListFragment : Fragment() {
             setPositiveButton("OK") { _, _ ->
                 val value = input.text.toString()
                 if (value.isNotEmpty()) {
-                    vm.addExperiment(value)
+                    val cal = Calendar.getInstance()
+                    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:SS", Locale.getDefault())
+                    vm.addExperiment(value, sdf.format(cal.time).toString())
                     Snackbar.make(v,
                             "New Experiment $value added.", Snackbar.LENGTH_SHORT).show()
                 } else {

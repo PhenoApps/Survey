@@ -20,9 +20,15 @@ class ExperimentListViewModel internal constructor(
 
     val experiments: LiveData<List<Experiment>> = repo.getAll()
 
-    fun addExperiment(experimentId: String) {
+    fun addExperiment(experimentId: String, date: String) {
         viewModelScope.launch {
-            repo.createExperiment(experimentId)
+            repo.createExperiment(experimentId, date)
+        }
+    }
+
+    fun deleteExperiment(experimentId: Experiment) {
+        viewModelScope.launch {
+            repo.delete(experimentId)
         }
     }
 }

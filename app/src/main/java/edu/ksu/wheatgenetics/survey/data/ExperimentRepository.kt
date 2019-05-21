@@ -6,15 +6,23 @@ import kotlinx.coroutines.withContext
 class ExperimentRepository private constructor(
         private val experimentDao: ExperimentDao
 ) {
-    suspend fun createExperiment(experimentId: String) {
+    suspend fun createExperiment(experimentId: String, d: String) {
         withContext(IO) {
-            experimentDao.insert(Experiment(experimentId))
+            val e = Experiment(experimentId)
+            e.date = d
+            experimentDao.insert(e)
         }
     }
 
     suspend fun update(vararg e: Experiment?) {
         withContext(IO) {
             experimentDao.update(*e)
+        }
+    }
+
+    suspend fun delete(vararg e: Experiment?) {
+        withContext(IO) {
+            experimentDao.delete(*e)
         }
     }
 

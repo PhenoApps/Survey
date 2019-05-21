@@ -38,4 +38,10 @@ class SampleListViewModel internal constructor(
             repo.updateSamples(*s)
         }
     }
+
+    fun delete(vararg s: Sample) {
+        viewModelScope.launch {
+            repo.delete(*s)
+        }
+    }
 }

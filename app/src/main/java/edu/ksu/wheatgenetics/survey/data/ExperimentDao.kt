@@ -1,10 +1,7 @@
 package edu.ksu.wheatgenetics.survey.data
 
 import androidx.lifecycle.LiveData
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 
 @Dao
 interface ExperimentDao {
@@ -16,4 +13,7 @@ interface ExperimentDao {
 
     @Insert
     fun insert(e: Experiment): Long
+
+    @Delete
+    fun delete(vararg e: Experiment?): Int
 }

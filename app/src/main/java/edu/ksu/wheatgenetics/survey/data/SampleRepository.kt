@@ -19,6 +19,11 @@ class SampleRepository private constructor(
         }
     }
 
+    suspend fun delete(vararg s: Sample) {
+        withContext(Dispatchers.IO) {
+            sampleDao.delete(*s)
+        }
+    }
     fun getPlot(eid: Int, plot: String) = sampleDao.getPlot(eid, plot)
 
     fun getPlotNames(eid: Int) = sampleDao.getPlotNames(eid)
