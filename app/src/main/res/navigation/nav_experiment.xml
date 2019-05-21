@@ -8,7 +8,7 @@
 
     <fragment
         android:id="@+id/experiment_fragment"
-        android:name="edu.ksu.wheatgenetics.survey.fragments.ExperimentListFragment"
+        android:name="org.phenoapps.survey.fragments.ExperimentListFragment"
         android:label="Experiments"
         tools:layout="@layout/fragment_experiment">
 
@@ -24,7 +24,7 @@
 
     <fragment
         android:id="@+id/satellite_plot_fragment"
-        android:name="edu.ksu.wheatgenetics.survey.fragments.SatViewFragment"
+        android:name="org.phenoapps.survey.fragments.SatViewFragment"
         android:label="Satellite Plot"
         tools:layout="@layout/fragment_satellite_plot">
         <action
@@ -35,13 +35,13 @@
 
     <fragment
         android:id="@+id/sample_list_fragment"
-        android:name="edu.ksu.wheatgenetics.survey.fragments.SampleListFragment"
+        android:name="org.phenoapps.survey.fragments.SampleListFragment"
         android:label="Samples"
         tools:layout="@layout/fragment_list_sample">
 
         <argument
             android:name="experiment"
-            app:argType="edu.ksu.wheatgenetics.survey.data.Experiment" />
+            app:argType="org.phenoapps.survey.data.Experiment" />
 
         <action
             android:id="@+id/action_sample_list_fragment_to_sample_fragment"
@@ -64,17 +64,17 @@
 
     <fragment
         android:id="@+id/fragment_map"
-        android:name="edu.ksu.wheatgenetics.survey.fragments.SampleMapFragment"
+        android:name="org.phenoapps.survey.fragments.SampleMapFragment"
         android:label="Maps"
         tools:layout="@layout/fragment_map_plots">
         <argument
             android:name="experiment"
-            app:argType="edu.ksu.wheatgenetics.survey.data.Experiment" />
+            app:argType="org.phenoapps.survey.data.Experiment" />
     </fragment>
 
     <fragment
         android:id="@+id/sample_fragment"
-        android:name="edu.ksu.wheatgenetics.survey.fragments.SampleFragment"
+        android:name="org.phenoapps.survey.fragments.SampleFragment"
         android:label="Sample"
         tools:layout="@layout/fragment_sample">
     </fragment>
