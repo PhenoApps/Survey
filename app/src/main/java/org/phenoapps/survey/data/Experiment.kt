@@ -1,11 +1,10 @@
-package edu.ksu.wheatgenetics.survey.data
+package org.phenoapps.survey.data
 
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.*
 
 @Entity(tableName = "experiments")
 data class Experiment(var name: String, var count: Int = 0): Parcelable {

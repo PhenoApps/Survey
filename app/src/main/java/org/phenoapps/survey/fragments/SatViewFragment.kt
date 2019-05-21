@@ -1,7 +1,10 @@
 package org.phenoapps.survey.fragments
 
 import android.content.Context
-import android.hardware.*
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater

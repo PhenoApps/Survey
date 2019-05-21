@@ -12,6 +12,7 @@ import org.phenoapps.survey.R
 import org.phenoapps.survey.data.Sample
 import org.phenoapps.survey.viewmodels.SampleViewModel
 
+
 class SampleAdapter(val context: Context
 ) : ListAdapter<Sample, SampleAdapter.ViewHolder>(SampleDiffCallback()) {
 

@@ -1,13 +1,13 @@
-package edu.ksu.wheatgenetics.survey.viewmodels
+package org.phenoapps.survey.viewmodels
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import edu.ksu.wheatgenetics.survey.data.Experiment
-import edu.ksu.wheatgenetics.survey.data.ExperimentRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.phenoapps.survey.data.Experiment
+import org.phenoapps.survey.data.ExperimentRepository
 
 class ExperimentListViewModel internal constructor(
         private val repo: ExperimentRepository

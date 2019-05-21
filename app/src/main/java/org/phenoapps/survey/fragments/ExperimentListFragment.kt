@@ -1,10 +1,9 @@
-package edu.ksu.wheatgenetics.survey.fragments
+package org.phenoapps.survey.fragments
 
 import android.content.Context
 import android.os.Bundle
 import android.text.InputType
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
@@ -17,11 +16,11 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import edu.ksu.wheatgenetics.survey.adapters.ExperimentAdapter
-import edu.ksu.wheatgenetics.survey.data.ExperimentRepository
-import edu.ksu.wheatgenetics.survey.data.SurveyDatabase
-import edu.ksu.wheatgenetics.survey.databinding.FragmentExperimentBinding
-import edu.ksu.wheatgenetics.survey.viewmodels.ExperimentListViewModel
+import org.phenoapps.survey.adapters.ExperimentAdapter
+import org.phenoapps.survey.data.ExperimentRepository
+import org.phenoapps.survey.data.SurveyDatabase
+import org.phenoapps.survey.databinding.FragmentExperimentBinding
+import org.phenoapps.survey.viewmodels.ExperimentListViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 

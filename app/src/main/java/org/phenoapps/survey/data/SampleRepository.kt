@@ -1,4 +1,4 @@
-package edu.ksu.wheatgenetics.survey.data
+package org.phenoapps.survey.data
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

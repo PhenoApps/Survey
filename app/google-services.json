@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:413273893665:android:12abccf3f9264d10",
         "android_client_info": {
-          "package_name": "edu.ksu.wheatgenetics.survey"
+          "package_name": "org.phenoapps.survey"
         }
       },
       "oauth_client": [
@@ -18,7 +18,7 @@
           "client_id": "413273893665-8cuogblfb9tskbh6f3sh0h6if66k7j61.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "edu.ksu.wheatgenetics.survey",
+            "package_name": "org.phenoapps.survey",
             "certificate_hash": "46facba11d00a3e511e9fb3084367094472c222e"
           }
         },

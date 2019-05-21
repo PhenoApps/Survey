@@ -1,12 +1,12 @@
-package edu.ksu.wheatgenetics.survey.viewmodels
+package org.phenoapps.survey.viewmodels
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import edu.ksu.wheatgenetics.survey.data.Experiment
-import edu.ksu.wheatgenetics.survey.data.ExperimentRepository
-import edu.ksu.wheatgenetics.survey.data.Sample
-import edu.ksu.wheatgenetics.survey.data.SampleRepository
 import kotlinx.coroutines.*
+import org.phenoapps.survey.data.Experiment
+import org.phenoapps.survey.data.ExperimentRepository
+import org.phenoapps.survey.data.Sample
+import org.phenoapps.survey.data.SampleRepository
 
 class SampleListViewModel internal constructor(
         private val eid: Int,

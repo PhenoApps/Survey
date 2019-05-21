@@ -1,4 +1,4 @@
-package edu.ksu.wheatgenetics.survey.data
+package org.phenoapps.survey.data
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
