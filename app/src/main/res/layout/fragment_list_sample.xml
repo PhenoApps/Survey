@@ -70,18 +70,18 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
             android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="12dp"
-            android:text="Collect"
+            android:layout_marginRight="12dp"
             android:background="@drawable/submit_location_button"
+            android:text="Collect"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/brgHeader"
-            android:layout_alignParentRight="true"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="12dp" />
+            app:layout_constraintTop_toBottomOf="@+id/sampleEditText" />
 
         <TextView
             android:id="@+id/latHeader"
@@ -257,6 +257,21 @@
                 android:layout_alignParentRight="true"
                 android:layout_marginLeft="8dp"
                 android:layout_marginRight="13dp" />
+
+        <EditText
+            android:id="@+id/sampleEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:ems="10"
+            android:hint="Sample ID"
+            android:inputType="textPersonName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/brgHeader" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

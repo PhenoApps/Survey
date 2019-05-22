@@ -5,6 +5,9 @@ import androidx.room.*
 
 @Dao
 interface SampleDao {
+    @Query("SELECT * FROM samples")
+    fun getAll(): LiveData<List<Sample>>
+
     @Query("SELECT * FROM samples WHERE :eid = eid")
     fun getAll(eid: Int): LiveData<List<Sample>>
 

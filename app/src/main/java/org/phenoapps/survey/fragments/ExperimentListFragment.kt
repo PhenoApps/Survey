@@ -70,7 +70,17 @@ class ExperimentListFragment : Fragment() {
         }).attachToRecyclerView(mBinding.recyclerView)
 
         mBinding.submitButton.setOnClickListener {
-            askUserNewExperimentName(mBinding.root.context, viewModel, it)
+            val value = mBinding.experimentIdEditText?.text.toString()
+            if (value.isNotEmpty()) {
+                val cal = Calendar.getInstance()
+                val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:SS", Locale.getDefault())
+                viewModel.addExperiment(value, sdf.format(cal.time).toString())
+                Snackbar.make(mBinding.root,
+                        "New Experiment $value added.", Snackbar.LENGTH_SHORT).show()
+            } else {
+                Snackbar.make(mBinding.root,
+                        "You must enter an experiment name.", Snackbar.LENGTH_LONG).show()
+            }
         }
 
         viewModel.experiments.observe(viewLifecycleOwner, Observer { result ->
@@ -80,35 +90,5 @@ class ExperimentListFragment : Fragment() {
             }
         })
         return mBinding.root
-    }
-
-    //Function that creates a Dialog with a single text entry for the user to decide a new experiment ID
-    private fun askUserNewExperimentName(ctx: Context, vm: ExperimentListViewModel, v: View) {
-
-        val input = EditText(ctx).apply {
-            inputType = InputType.TYPE_CLASS_TEXT
-            hint = "Experiment"
-        }
-
-        val builder = AlertDialog.Builder(ctx).apply {
-
-            setView(input)
-
-            setPositiveButton("OK") { _, _ ->
-                val value = input.text.toString()
-                if (value.isNotEmpty()) {
-                    val cal = Calendar.getInstance()
-                    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:SS", Locale.getDefault())
-                    vm.addExperiment(value, sdf.format(cal.time).toString())
-                    Snackbar.make(v,
-                            "New Experiment $value added.", Snackbar.LENGTH_SHORT).show()
-                } else {
-                    Snackbar.make(v,
-                            "You must enter an experiment name.", Snackbar.LENGTH_LONG).show()
-                }
-            }
-            setTitle("Enter a new experiment name")
-        }
-        builder.show()
     }
 }

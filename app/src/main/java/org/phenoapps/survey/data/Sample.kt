@@ -19,11 +19,9 @@ data class Sample(
         var latitude: Double,
         var longitude: Double,
         var person: String,
-        var plot: String
+        var plot: String,
+        var date: String
 ) {
         @ColumnInfo(name = "id") @PrimaryKey(autoGenerate = true)
         var id = 0
-
-        @ColumnInfo(name = "date")
-        var date = String()
 }
