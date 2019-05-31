@@ -46,13 +46,13 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.1'
 
     implementation 'com.google.firebase:firebase-crash:16.2.1'
-    implementation "com.google.firebase:firebase-core:16.0.7"
+    implementation "com.google.firebase:firebase-core:16.0.9"
     implementation 'com.google.android.gms:play-services-maps:16.1.0'
 
-    implementation "androidx.appcompat:appcompat:1.1.0-alpha02"
-    implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha3"
+    implementation "androidx.appcompat:appcompat:1.1.0-alpha05"
+    implementation "androidx.constraintlayout:constraintlayout:2.0.0-beta1"
     implementation "androidx.lifecycle:lifecycle-extensions:2.0.0"
-    implementation "androidx.recyclerview:recyclerview:1.1.0-alpha02"
+    implementation "androidx.recyclerview:recyclerview:1.1.0-alpha05"
     implementation "androidx.room:room-runtime:2.1.0-alpha04"
 }
 

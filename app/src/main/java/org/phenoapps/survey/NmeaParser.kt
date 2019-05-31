@@ -64,7 +64,7 @@ internal class NmeaParser {
                 nmea.split("*")[1]
                 var nmeaType = String()
                 val sentence = nmea.split(",")
-                Log.d("NMEA", "${sentence.size} $nmea")
+                //Log.d("NMEA", "${sentence.size} $nmea")
 
                 if (sentence.size > 0) {
                     nmeaType = sentence[0]

@@ -73,7 +73,8 @@ class SampleListFragment: Fragment() {
 
         mExperiment = SampleListFragmentArgs.fromBundle(arguments!!).experiment
 
-        mBinding = FragmentListSampleBinding.inflate(inflater, container, false)
+        mBinding = org.phenoapps.survey.databinding.FragmentListSampleBinding
+                .inflate(inflater, container, false)
 
         mAdapter = SampleAdapter(mBinding.root.context)
 
@@ -86,47 +87,46 @@ class SampleListFragment: Fragment() {
                     }
                 }).get(SurveyDataViewModel::class.java).apply {
             data.observe(viewLifecycleOwner,
-                    Observer { data ->
-                        if ((data.nmea ?: "").isNotBlank()
-                                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            try {
-                                parser.parse(data.nmea ?: "")
-                                mBinding.latTextView.text = parser.latitude
-                                mBinding.lngTextView.text = parser.longitude
-                                mBinding.accTextView.text = parser.fix
-                                mBinding.spdTextView.text = parser.speed
-                                mBinding.utcTextView.text = parser.utc
-                                mBinding.brgTextView.text = parser.bearing
-                                if (parser.satellites.isEmpty()) {
-                                    mBinding.satTextView.text = "${parser.gsv.size}"
-                                } else {
-                                    val maxSats = maxOf(parser.satellites.toInt(), parser.gsv.size)
-                                    mBinding.satTextView.text = "${parser.gsv.size}/$maxSats"
-                                }
-                                mBinding.altTextView.text = parser.altitude
-                            } catch (e: Exception) {
-                                mFirebaseAnalytics.logEvent("PARSERERROR", Bundle().apply {
-                                    putString("ERROR", e.stackTrace.toString())
-                                })
-                            }
+            Observer { data ->
+                if ((data.nmea ?: "").isNotBlank() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    try {
+                        parser.parse(data.nmea ?: "")
+                        mBinding.latTextView.text = parser.latitude
+                        mBinding.lngTextView.text = parser.longitude
+                        mBinding.accTextView.text = parser.fix
+                        mBinding.spdTextView.text = parser.speed
+                        mBinding.utcTextView.text = parser.utc
+                        mBinding.brgTextView.text = parser.bearing
+                        if (parser.satellites.isEmpty()) {
+                            mBinding.satTextView.text = "${parser.gsv.size}"
                         } else {
-                            mBinding.latTextView.text = data.lat.toString()
-                            mBinding.lngTextView.text = data.lng.toString()
-                            mBinding.accTextView.text = "GPS or Net"
+                            val maxSats = maxOf(parser.satellites.toInt(), parser.gsv.size)
+                            mBinding.satTextView.text = "${parser.gsv.size}/$maxSats"
                         }
-                    })
+                        mBinding.altTextView.text = parser.altitude
+                    } catch (e: Exception) {
+                        mFirebaseAnalytics.logEvent("PARSERERROR", Bundle().apply {
+                            putString("ERROR", e.stackTrace.toString())
+                        })
+                    }
+                } else {
+                    mBinding.latTextView.text = data.lat.toString()
+                    mBinding.lngTextView.text = data.lng.toString()
+                    mBinding.accTextView.text = "GPS or Net"
+                }
+            })
         }
 
         mViewModel = ViewModelProviders.of(this,
-                object : ViewModelProvider.NewInstanceFactory() {
+            object : ViewModelProvider.NewInstanceFactory() {
 
-                    @Suppress("UNCHECKED_CAST")
-                    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                        return SampleListViewModel(mExperiment.id, SampleRepository.getInstance(
-                                SurveyDatabase.getInstance(requireContext()).sampleDao()),
-                                ExperimentRepository.getInstance(SurveyDatabase.getInstance(requireContext()).experimentDao())) as T
-                    }
-                }).get(SampleListViewModel::class.java)
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+                return SampleListViewModel(mExperiment.id, SampleRepository.getInstance(
+                        SurveyDatabase.getInstance(requireContext()).sampleDao()),
+                        ExperimentRepository.getInstance(SurveyDatabase.getInstance(requireContext()).experimentDao())) as T
+            }
+        }).get(SampleListViewModel::class.java)
 
         ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
 
@@ -145,28 +145,40 @@ class SampleListFragment: Fragment() {
             }
         }).attachToRecyclerView(mBinding.recyclerView)
 
-        mViewModel.samples.observe(viewLifecycleOwner, Observer { samples ->
+        mViewModel.samples.observe(viewLifecycleOwner, Observer {samples ->
             samples.let {
                 mAdapter.submitList(samples.asReversed())
             }
         })
 
         mBinding.submitSample.setOnClickListener {
-
-            val value = mBinding.sampleEditText.text.toString()
-            if (value.isNotEmpty() && mBinding.latTextView.text.isNotBlank()
-                    && mBinding.lngTextView.text.isNotBlank()) {
-                //TODO ADD PERSON
-
-                mViewModel.addSample(mExperiment, value, mBinding.latTextView.text.toString().toDouble(),
-                        mBinding.lngTextView.text.toString().toDouble(), "CHANEY")
-                Snackbar.make(mBinding.root,
-                        "New sample $value added.", Snackbar.LENGTH_SHORT).show()
-            } else {
-                Snackbar.make(mBinding.root,
-                        "You must enter a sample name.", Snackbar.LENGTH_LONG).show()
+            val input = EditText(requireContext()).apply {
+                inputType = InputType.TYPE_CLASS_TEXT
+                hint = "Sample"
             }
 
+            val builder = AlertDialog.Builder(requireContext()).apply {
+
+                setView(input)
+
+                setPositiveButton("OK") { _, _ ->
+                    val value = input.text.toString()
+                    if (value.isNotEmpty() && mBinding.latTextView.text.isNotBlank()
+                            && mBinding.lngTextView.text.isNotBlank()) {
+                        //TODO ADD PERSON
+
+                        mViewModel.addSample(mExperiment, value, mBinding.latTextView.text.toString().toDouble(),
+                                mBinding.lngTextView.text.toString().toDouble(), "CHANEY")
+                        Snackbar.make(it,
+                                "New sample $value added.", Snackbar.LENGTH_SHORT).show()
+                    } else {
+                        Snackbar.make(it,
+                                "You must enter a sample name.", Snackbar.LENGTH_LONG).show()
+                    }
+                }
+                setTitle("Enter a new experiment name")
+            }
+            builder.show()
         }
 
         return mBinding.root
@@ -194,37 +206,37 @@ class SampleListFragment: Fragment() {
 
     private fun findPairedBTDevice() {
 
-        if (mBluetoothAdapter != null) {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
-            val pairedDevices = mBluetoothAdapter.getBondedDevices()
-            if (!pairedDevices.isEmpty()) {
-                val bluetoothMap = HashMap<String, BluetoothDevice>()
-                val bluetoothDevicesAdapter = ArrayAdapter<String>(requireContext(), R.layout.row)
-                for (bd in pairedDevices) {
-                    bluetoothMap.put(bd.getName(), bd)
-                    bluetoothDevicesAdapter.add(bd.getName())
-                }
+        val pairedDevices = mBluetoothAdapter.getBondedDevices()
+        if (!pairedDevices.isEmpty()) {
+            val bluetoothMap = HashMap<String, BluetoothDevice>()
+            val bluetoothDevicesAdapter = ArrayAdapter<String>(requireContext(), R.layout.row)
+            for (bd in pairedDevices) {
+                bluetoothMap.put(bd.getName(), bd)
+                bluetoothDevicesAdapter.add(bd.getName())
+            }
 
-                val builder = AlertDialog.Builder(requireContext())
-                builder.setTitle("Choose your paired bluetooth device.")
-                val devices = ListView(requireContext())
-                devices.setChoiceMode(ListView.CHOICE_MODE_SINGLE)
-                //devices.setSelector(R.drawable.list_selector_focus)
-                devices.setAdapter(bluetoothDevicesAdapter)
-                builder.setView(devices)
-                builder.setPositiveButton("OK") { dialog, which ->
-                    if (devices.getCheckedItemCount() > 0) {
-                        val value = bluetoothDevicesAdapter.getItem(devices.getCheckedItemPosition())
-                        if (value != null) {
-                            mBluetoothDevice = bluetoothMap.get(value)!!
-                            ConnectThread(mBluetoothDevice).start()
-                        }
+            val builder = AlertDialog.Builder(requireContext())
+            builder.setTitle("Choose your paired bluetooth device.")
+            val devices = ListView(requireContext())
+            devices.setChoiceMode(ListView.CHOICE_MODE_SINGLE)
+            //devices.setSelector(R.drawable.list_selector_focus)
+            devices.setAdapter(bluetoothDevicesAdapter)
+            builder.setView(devices)
+            builder.setPositiveButton("OK") { dialog, which ->
+                if (devices.getCheckedItemCount() > 0) {
+                    val value = bluetoothDevicesAdapter.getItem(devices.getCheckedItemPosition())
+                    if (value != null) {
+                        mBluetoothDevice = bluetoothMap.get(value)!!
+                        ConnectThread(mBluetoothDevice).start()
                     }
                 }
-
-                builder.show()
             }
+
+            builder.show()
         }
+
 
     }
 
