@@ -3,8 +3,14 @@ package org.phenoapps.survey.fragments
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Message
 import android.text.InputType
 import android.util.Log
 import android.view.*
@@ -27,10 +33,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import org.phenoapps.survey.NmeaParser
 import org.phenoapps.survey.R
 import org.phenoapps.survey.adapters.SampleAdapter
-import org.phenoapps.survey.data.Experiment
-import org.phenoapps.survey.data.ExperimentRepository
-import org.phenoapps.survey.data.SampleRepository
-import org.phenoapps.survey.data.SurveyDatabase
+import org.phenoapps.survey.data.*
 import org.phenoapps.survey.databinding.FragmentListSampleBinding
 import org.phenoapps.survey.viewmodels.SampleListViewModel
 import org.phenoapps.survey.viewmodels.SurveyDataViewModel
@@ -47,6 +50,8 @@ class SampleListFragment: Fragment() {
     //this object contains an array of sample models including sample name, person, and experiment id
     private lateinit var mViewModel: SampleListViewModel
 
+    private lateinit var mViewModelGPS: SurveyDataViewModel
+
     //a data binding class that contains the layout views
     private lateinit var mBinding: FragmentListSampleBinding
 
@@ -56,6 +61,8 @@ class SampleListFragment: Fragment() {
     private lateinit var mBluetoothDevice: BluetoothDevice
     private lateinit var mBroadcastManager: LocalBroadcastManager
     private lateinit var mConnectedThread: ConnectedThread
+
+    private lateinit var mLocalBroadcastManager: LocalBroadcastManager
 
     private var parser = NmeaParser()
 
@@ -71,6 +78,13 @@ class SampleListFragment: Fragment() {
 
         parser = NmeaParser()
 
+        mLocalBroadcastManager = LocalBroadcastManager.getInstance(requireContext())
+        val filter = IntentFilter()
+        filter.addAction("BROADCAST_BT_OUTPUT")
+        mLocalBroadcastManager.registerReceiver(
+                ResponseReceiver(),
+                filter
+        )
         mExperiment = SampleListFragmentArgs.fromBundle(arguments!!).experiment
 
         mBinding = org.phenoapps.survey.databinding.FragmentListSampleBinding
@@ -80,42 +94,7 @@ class SampleListFragment: Fragment() {
 
         mBinding.recyclerView.adapter = mAdapter
 
-        ViewModelProviders.of(this,
-                object : ViewModelProvider.NewInstanceFactory() {
-                    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                        return SurveyDataViewModel(requireContext()) as T
-                    }
-                }).get(SurveyDataViewModel::class.java).apply {
-            data.observe(viewLifecycleOwner,
-            Observer { data ->
-                if ((data.nmea ?: "").isNotBlank() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    try {
-                        parser.parse(data.nmea ?: "")
-                        mBinding.latTextView.text = parser.latitude
-                        mBinding.lngTextView.text = parser.longitude
-                        mBinding.accTextView.text = parser.fix
-                        mBinding.spdTextView.text = parser.speed
-                        mBinding.utcTextView.text = parser.utc
-                        mBinding.brgTextView.text = parser.bearing
-                        if (parser.satellites.isEmpty()) {
-                            mBinding.satTextView.text = "${parser.gsv.size}"
-                        } else {
-                            val maxSats = maxOf(parser.satellites.toInt(), parser.gsv.size)
-                            mBinding.satTextView.text = "${parser.gsv.size}/$maxSats"
-                        }
-                        mBinding.altTextView.text = parser.altitude
-                    } catch (e: Exception) {
-                        mFirebaseAnalytics.logEvent("PARSERERROR", Bundle().apply {
-                            putString("ERROR", e.stackTrace.toString())
-                        })
-                    }
-                } else {
-                    mBinding.latTextView.text = data.lat.toString()
-                    mBinding.lngTextView.text = data.lng.toString()
-                    mBinding.accTextView.text = "GPS or Net"
-                }
-            })
-        }
+        observeGPS()
 
         mViewModel = ViewModelProviders.of(this,
             object : ViewModelProvider.NewInstanceFactory() {
@@ -184,6 +163,49 @@ class SampleListFragment: Fragment() {
         return mBinding.root
     }
 
+    private val observer = Observer<SurveyData> { data ->
+        if ((data.nmea ?: "").isNotBlank() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                parser.parse(data.nmea ?: "")
+                mBinding.latTextView.text = parser.latitude
+                mBinding.lngTextView.text = parser.longitude
+                mBinding.accTextView.text = parser.fix
+                mBinding.spdTextView.text = parser.speed
+                mBinding.utcTextView.text = parser.utc
+                mBinding.brgTextView.text = parser.bearing
+                if (parser.satellites.isEmpty()) {
+                    mBinding.satTextView.text = "${parser.gsv.size}"
+                } else {
+                    val maxSats = maxOf(parser.satellites.toInt(), parser.gsv.size)
+                    mBinding.satTextView.text = "${parser.gsv.size}/$maxSats"
+                }
+                mBinding.altTextView.text = parser.altitude
+            } catch (e: Exception) {
+                mFirebaseAnalytics.logEvent("PARSERERROR", Bundle().apply {
+                    putString("ERROR", e.stackTrace.toString())
+                })
+            }
+        } else {
+            mBinding.latTextView.text = data.lat.toString()
+            mBinding.lngTextView.text = data.lng.toString()
+            mBinding.accTextView.text = "GPS or Net"
+        }
+    }
+    private fun unobserveGPS() {
+        mViewModelGPS.data.removeObserver(observer)
+    }
+
+    private fun observeGPS() {
+        mViewModelGPS = ViewModelProviders.of(this,
+                object : ViewModelProvider.NewInstanceFactory() {
+                    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+                        return SurveyDataViewModel(requireContext()) as T
+                    }
+                }).get(SurveyDataViewModel::class.java).apply {
+            data.observe(viewLifecycleOwner, observer)
+        }
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when(item.itemId) {
             R.id.action_map_locations -> {
@@ -228,6 +250,7 @@ class SampleListFragment: Fragment() {
                 if (devices.getCheckedItemCount() > 0) {
                     val value = bluetoothDevicesAdapter.getItem(devices.getCheckedItemPosition())
                     if (value != null) {
+                        unobserveGPS()
                         mBluetoothDevice = bluetoothMap.get(value)!!
                         ConnectThread(mBluetoothDevice).start()
                     }
@@ -238,6 +261,19 @@ class SampleListFragment: Fragment() {
         }
 
 
+    }
+
+    //Receives GPS updates from a bluetooth device or the phone GPS
+    private inner class ResponseReceiver : BroadcastReceiver() {
+
+        override fun onReceive(context: Context, intent: Intent) {
+
+            if (intent.hasExtra("BT_OUTPUT")) {
+
+                val raw = intent.getStringExtra("BT_OUTPUT")
+
+            }
+        }
     }
 
     private inner class ConnectThread internal constructor(device: BluetoothDevice) : Thread() {
@@ -281,7 +317,7 @@ class SampleListFragment: Fragment() {
            // if (mConnectedThread != null && (mConnectedThread.isAlive()
              //               || mConnectedThread.isDaemon() || mConnectedThread.isInterrupted()))
                 //mConnectedThread.cancel()
-            mConnectedThread = ConnectedThread(mmSocket)
+            mConnectedThread = ConnectedThread(mmSocket, mHandler)
             mConnectedThread.start()
 
         }
@@ -297,7 +333,24 @@ class SampleListFragment: Fragment() {
         }
     }
 
-    private class ConnectedThread internal constructor(val socket: BluetoothSocket): Thread() {
+    val mHandler = object : Handler() {
+
+        override fun handleMessage(input: Message) {
+
+            val raw = input.obj as String
+            when (input.what) {
+                333 ->
+                    //progress is complete, send the final message
+                    mLocalBroadcastManager.sendBroadcast(
+                            Intent("BROADCAST_BT_OUTPUT")
+                                    .putExtra("BT_OUTPUT", raw))
+                334 ->
+                    observeGPS()
+            }
+        }
+    }
+
+    class ConnectedThread internal constructor(val socket: BluetoothSocket, val handler: Handler): Thread() {
 
         private lateinit var mmInStream: InputStream
         private lateinit var mmOutStream: OutputStream
@@ -314,18 +367,32 @@ class SampleListFragment: Fragment() {
 
         override fun run() {
 
-            mmBuffer = ByteArray(256)
-            var bytes = 0
-            while (true) {
-                try {
-                    mmBuffer[bytes] = mmInStream.read().toByte()
-                    if (bytes > 1 && String(mmBuffer, bytes-1, bytes) == "\r\n") {
-                        val msg = String(mmBuffer, 0, bytes-1)
-                        Log.d("TEST", msg)
+
+            try{
+                mmBuffer = ByteArray(256)
+                var bytes = 0
+                while (true) {
+                    try {
+                        mmBuffer[bytes] = mmInStream.read().toByte()
+                        if (bytes > 1 && String(mmBuffer, bytes-1, bytes) == "\r\n") {
+                            val msg = String(mmBuffer, 0, bytes-1)
+
+                            Log.d("TEST", msg)
+                            val readMsg = handler.obtainMessage(
+                                    333, bytes, -1,
+                                    msg)
+                            readMsg.sendToTarget()
+                            bytes = 0
+                        } else bytes++
+                    } catch (e: IOException) {
+                        e.printStackTrace()
                     }
-                } catch (e: IOException) {
-                    e.printStackTrace()
                 }
+            } finally {
+                val readMsg = handler.obtainMessage(
+                        334, "OBSERVE".toByteArray().size, -1,
+                        "OBSERVE")
+                readMsg.sendToTarget()
             }
         }
     }
