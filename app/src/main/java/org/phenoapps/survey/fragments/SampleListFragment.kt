@@ -273,11 +273,11 @@ class SampleListFragment: Fragment() {
             if (intent.hasExtra("BT_OUTPUT")) {
 
                 val raw = intent.getStringExtra("BT_OUTPUT")
-                Snackbar.make(mBinding.sampleEditText.rootView, raw, Snackbar.LENGTH_LONG).show()
+                //Snackbar.make(mBinding.sampleEditText.rootView, raw, Snackbar.LENGTH_LONG).show()
                 //Toast.makeText(requireContext(), raw, Toast.LENGTH_LONG).show()
                 //Log.d("BT", raw)
                 try {
-                    parser.parse(raw)
+                    parser.parse(raw.trim())
                     mBinding.latTextView.text = parser.latitude
                     mBinding.lngTextView.text = parser.longitude
                     mBinding.accTextView.text = "BT-${parser.fix}"
@@ -349,7 +349,7 @@ class SampleListFragment: Fragment() {
         // Closes the client socket and causes the thread to finish.
         fun cancel() {
             try {
-                mConnectedThread.cancel()
+                if (::mConnectedThread.isInitialized) mConnectedThread.cancel()
                 mmSocket!!.close()
             } catch (e: IOException) {
                 Log.e("CONNECT THREAD : CANCEL", "Could not close the client socket", e)

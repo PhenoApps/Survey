@@ -44,7 +44,8 @@ internal class NmeaParser {
         if (nmea.contains("*")) {
             val split = nmea.split("*") //$NMEA,,,,,,,*33 <- getting the checksum
             val checksum = split[1].trim().toByte(16) //erase newline and line feed
-            val msg = split[0].substring(2) //skip the $ and the first symbol
+            val msg = if ("$" in split[0]) split[0].substring(2)
+            else split[0].substring(0)
             val start = split[0].toCharArray()[1]
             var sum: Int = start.toInt()
             msg.forEach {
@@ -78,7 +79,7 @@ internal class NmeaParser {
                 }
 
                 when (nmeaType) {
-                    "GGA" -> {
+                    "GGA", "PGGA" -> {
                         mPrevSentence = "GGA"
                         try {
                             utc = format.parse(sentence[1]).toString().split(" ")[3] ?: ""
@@ -111,7 +112,7 @@ internal class NmeaParser {
                             modeIndicator = sentence[9]
                         }
                     }
-                    "GSA" -> {
+                    "GSA", "PGSA" -> {
                         //GPS receiver operating mode
                         mPrevSentence = "GSA"
                         if (sentence.size == 19) {
@@ -198,16 +199,16 @@ internal class NmeaParser {
     }
 
     private fun parseFixQuality(f: String) {
-        when (f) {
-            "0" -> fix = "invalid"
-            "1" -> fix = "GPS"
-            "2" -> fix = "DGPS"
-            "3" -> fix = "PPS"
-            "4" -> fix = "RTK"
-            "5" -> fix = "Float RTK"
-            "6" -> fix = "estimated"
-            "7" -> fix = "manual input mode"
-            "8" -> fix = "simulation"
+        fix = when (f) {
+            "1" -> "GPS"
+            "2" -> "DGPS"
+            "3" -> "PPS"
+            "4" -> "RTK"
+            "5" -> "Float RTK"
+            "6" -> "estimated"
+            "7" -> "manual input mode"
+            "8" -> "simulation"
+            else -> "invalid"
         }
     }
 }
