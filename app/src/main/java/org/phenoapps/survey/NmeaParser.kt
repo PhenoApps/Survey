@@ -68,6 +68,7 @@ internal class NmeaParser {
 
                 if (sentence.size > 0) {
                     nmeaType = sentence[0]
+                    Log.d("TALKER", nmeaType)
                     //All messages should have  $TI where TI is the talker identifier
                     //followed by a 3 character nmea message type
                     if (nmeaType.length == 6) {

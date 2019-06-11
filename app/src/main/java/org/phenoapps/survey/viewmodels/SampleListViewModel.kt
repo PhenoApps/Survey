@@ -29,7 +29,7 @@ class SampleListViewModel internal constructor(
 
     fun addSample(e: Experiment, name: String, lat: Double,
                   lng: Double, person: String, plot: String = "") {
-        viewModelScope.async {
+        viewModelScope.launch {
             val cal = Calendar.getInstance()
             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:SS", Locale.getDefault())
             repo.createSample(e.id, name, lat, lng, person, plot, sdf.format(cal.time).toString())
@@ -43,9 +43,10 @@ class SampleListViewModel internal constructor(
         }
     }
 
-    fun delete(vararg s: Sample) {
+    fun delete(e: Experiment, vararg s: Sample) {
         viewModelScope.launch {
             repo.delete(*s)
+            expRepo.update(e.apply { count -= 1})
         }
     }
 }

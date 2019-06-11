@@ -17,6 +17,7 @@ import android.view.*
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ListView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -59,12 +60,14 @@ class SampleListFragment: Fragment() {
 
     private lateinit var mBluetoothAdapter: BluetoothAdapter
     private lateinit var mBluetoothDevice: BluetoothDevice
-    private lateinit var mBroadcastManager: LocalBroadcastManager
     private lateinit var mConnectedThread: ConnectedThread
+    private lateinit var mConnectThread: ConnectThread
 
     private lateinit var mLocalBroadcastManager: LocalBroadcastManager
 
     private var parser = NmeaParser()
+
+    private var mIsUsingBT = false
 
     private lateinit var mAdapter: SampleAdapter
 
@@ -87,8 +90,7 @@ class SampleListFragment: Fragment() {
         )
         mExperiment = SampleListFragmentArgs.fromBundle(arguments!!).experiment
 
-        mBinding = org.phenoapps.survey.databinding.FragmentListSampleBinding
-                .inflate(inflater, container, false)
+        mBinding = FragmentListSampleBinding.inflate(inflater, container, false)
 
         mAdapter = SampleAdapter(mBinding.root.context)
 
@@ -118,7 +120,7 @@ class SampleListFragment: Fragment() {
                 val newList = mAdapter.currentList.toMutableList()
                 newList.removeAt(viewHolder.adapterPosition)
 
-                mViewModel.delete(mAdapter.currentList[viewHolder.adapterPosition])
+                mViewModel.delete(mExperiment, mAdapter.currentList[viewHolder.adapterPosition])
 
                 mAdapter.submitList(newList)
             }
@@ -131,33 +133,20 @@ class SampleListFragment: Fragment() {
         })
 
         mBinding.submitSample.setOnClickListener {
-            val input = EditText(requireContext()).apply {
-                inputType = InputType.TYPE_CLASS_TEXT
-                hint = "Sample"
+            val value = mBinding.sampleEditText.text.toString()
+            if (value.isNotEmpty() && mBinding.latTextView.text.isNotBlank()
+                    && mBinding.lngTextView.text.isNotBlank()) {
+                //TODO ADD PERSON
+
+                mViewModel.addSample(mExperiment, value, mBinding.latTextView.text.toString().toDouble(),
+                        mBinding.lngTextView.text.toString().toDouble(), "CHANEY")
+                Snackbar.make(it,
+                        "New sample $value added.", Snackbar.LENGTH_SHORT).show()
+                mBinding.sampleEditText.text.clear()
+            } else {
+                Snackbar.make(it,
+                        "You must enter a sample name.", Snackbar.LENGTH_LONG).show()
             }
-
-            val builder = AlertDialog.Builder(requireContext()).apply {
-
-                setView(input)
-
-                setPositiveButton("OK") { _, _ ->
-                    val value = input.text.toString()
-                    if (value.isNotEmpty() && mBinding.latTextView.text.isNotBlank()
-                            && mBinding.lngTextView.text.isNotBlank()) {
-                        //TODO ADD PERSON
-
-                        mViewModel.addSample(mExperiment, value, mBinding.latTextView.text.toString().toDouble(),
-                                mBinding.lngTextView.text.toString().toDouble(), "CHANEY")
-                        Snackbar.make(it,
-                                "New sample $value added.", Snackbar.LENGTH_SHORT).show()
-                    } else {
-                        Snackbar.make(it,
-                                "You must enter a sample name.", Snackbar.LENGTH_LONG).show()
-                    }
-                }
-                setTitle("Enter a new experiment name")
-            }
-            builder.show()
         }
 
         return mBinding.root
@@ -191,11 +180,14 @@ class SampleListFragment: Fragment() {
             mBinding.accTextView.text = "GPS or Net"
         }
     }
+
     private fun unobserveGPS() {
+        mIsUsingBT = true
         mViewModelGPS.data.removeObserver(observer)
     }
 
     private fun observeGPS() {
+        mIsUsingBT = false
         mViewModelGPS = ViewModelProviders.of(this,
                 object : ViewModelProvider.NewInstanceFactory() {
                     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
@@ -214,7 +206,15 @@ class SampleListFragment: Fragment() {
                 true
             }
             R.id.action_connect_bluetooth -> {
-                findPairedBTDevice()
+                if (mIsUsingBT) {
+                    if (::mConnectThread.isInitialized) {
+                        observeGPS()
+                        mIsUsingBT = false
+                        mConnectThread.cancel()
+                    }
+                } else {
+                    findPairedBTDevice()
+                }
                 true
             }
             else -> item.onNavDestinationSelected(findNavController())
@@ -243,24 +243,26 @@ class SampleListFragment: Fragment() {
             builder.setTitle("Choose your paired bluetooth device.")
             val devices = ListView(requireContext())
             devices.setChoiceMode(ListView.CHOICE_MODE_SINGLE)
-            //devices.setSelector(R.drawable.list_selector_focus)
+            devices.setSelector(R.drawable.list_selector_focus)
             devices.setAdapter(bluetoothDevicesAdapter)
             builder.setView(devices)
+
             builder.setPositiveButton("OK") { dialog, which ->
                 if (devices.getCheckedItemCount() > 0) {
                     val value = bluetoothDevicesAdapter.getItem(devices.getCheckedItemPosition())
                     if (value != null) {
                         unobserveGPS()
-                        mBluetoothDevice = bluetoothMap.get(value)!!
-                        ConnectThread(mBluetoothDevice).start()
+                        mIsUsingBT = true
+                        mBluetoothDevice = bluetoothMap[value]!!
+                        mConnectThread = ConnectThread(mBluetoothDevice).apply {
+                            start()
+                        }
                     }
                 }
             }
 
             builder.show()
         }
-
-
     }
 
     //Receives GPS updates from a bluetooth device or the phone GPS
@@ -271,7 +273,29 @@ class SampleListFragment: Fragment() {
             if (intent.hasExtra("BT_OUTPUT")) {
 
                 val raw = intent.getStringExtra("BT_OUTPUT")
-
+                Snackbar.make(mBinding.sampleEditText.rootView, raw, Snackbar.LENGTH_LONG).show()
+                //Toast.makeText(requireContext(), raw, Toast.LENGTH_LONG).show()
+                //Log.d("BT", raw)
+                try {
+                    parser.parse(raw)
+                    mBinding.latTextView.text = parser.latitude
+                    mBinding.lngTextView.text = parser.longitude
+                    mBinding.accTextView.text = "BT-${parser.fix}"
+                    mBinding.spdTextView.text = parser.speed
+                    mBinding.utcTextView.text = parser.utc
+                    mBinding.brgTextView.text = parser.bearing
+                    if (parser.satellites.isEmpty()) {
+                        mBinding.satTextView.text = "${parser.gsv.size}"
+                    } else {
+                        val maxSats = maxOf(parser.satellites.toInt(), parser.gsv.size)
+                        mBinding.satTextView.text = "${parser.gsv.size}/$maxSats"
+                    }
+                    mBinding.altTextView.text = parser.altitude
+                } catch (e: Exception) {
+                    mFirebaseAnalytics.logEvent("PARSERERROR", Bundle().apply {
+                        putString("ERROR", e.stackTrace.toString())
+                    })
+                }
             }
         }
     }
@@ -325,6 +349,7 @@ class SampleListFragment: Fragment() {
         // Closes the client socket and causes the thread to finish.
         fun cancel() {
             try {
+                mConnectedThread.cancel()
                 mmSocket!!.close()
             } catch (e: IOException) {
                 Log.e("CONNECT THREAD : CANCEL", "Could not close the client socket", e)
@@ -369,12 +394,18 @@ class SampleListFragment: Fragment() {
 
 
             try{
-                mmBuffer = ByteArray(256)
+                mmBuffer = ByteArray(512)
                 var bytes = 0
-                while (true) {
+                while (socket.isConnected) {
                     try {
+                        /*bytes = mmInStream.read(mmBuffer)
+                        val msg = String(mmBuffer, 0, bytes)
+                        val readMsg = handler.obtainMessage(
+                                333, bytes, -1,
+                                msg)
+                        readMsg.sendToTarget()*/
                         mmBuffer[bytes] = mmInStream.read().toByte()
-                        if (bytes > 1 && String(mmBuffer, bytes-1, bytes) == "\r\n") {
+                        if (bytes > 1 && String(mmBuffer, 0, bytes-1).endsWith("\r\n")) {
                             val msg = String(mmBuffer, 0, bytes-1)
 
                             Log.d("TEST", msg)
@@ -395,7 +426,16 @@ class SampleListFragment: Fragment() {
                 readMsg.sendToTarget()
             }
         }
+
+        // Closes the client socket and causes the thread to finish.
+        fun cancel() {
+            try {
+                mmInStream.close()
+                mmOutStream.close()
+                socket!!.close()
+            } catch (e: IOException) {
+                Log.e("CONNECT THREAD : CANCEL", "Could not close the client socket", e)
+            }
+        }
     }
-
-
 }
