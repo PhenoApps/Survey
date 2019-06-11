@@ -394,7 +394,7 @@ class SampleListFragment: Fragment() {
 
 
             try{
-                mmBuffer = ByteArray(512)
+                mmBuffer = ByteArray(256)
                 var bytes = 0
                 while (socket.isConnected) {
                     try {
