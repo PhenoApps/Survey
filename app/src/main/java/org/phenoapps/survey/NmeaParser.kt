@@ -77,9 +77,10 @@ internal class NmeaParser {
                         nmeaType = nmeaType.substring(3)
                     }
                 }
+                Log.d("NMEA", nmeaType)
 
-                when (nmeaType) {
-                    "GGA", "PGGA" -> {
+                when  {
+                    "GGA" in nmeaType -> {
                         mPrevSentence = "GGA"
                         try {
                             utc = format.parse(sentence[1]).toString().split(" ")[3] ?: ""
@@ -94,7 +95,7 @@ internal class NmeaParser {
                         altitude = sentence[9] + sentence[10]
                         meanSeaLevel = sentence[11] + sentence[12]
                     }
-                    "RMC" -> { //recommended minimum specific gnss data
+                    "RMC" in nmeaType -> { //recommended minimum specific gnss data
                         if (sentence.size == 14) {
 
                             mPrevSentence = "RMC"
@@ -112,8 +113,9 @@ internal class NmeaParser {
                             modeIndicator = sentence[9]
                         }
                     }
-                    "GSA", "PGSA" -> {
+                    "GSA" in nmeaType -> {
                         //GPS receiver operating mode
+                        Log.d("SENT", sentence.joinToString(","))
                         mPrevSentence = "GSA"
                         if (sentence.size == 19) {
                             receiverMode = sentence[1]
@@ -123,9 +125,11 @@ internal class NmeaParser {
                             hdop = sentence[16]
                             vdop = sentence[17]
                         }
+                        latitude = sentence.joinToString(",")
+
                     }
                     //TODO parse GSV messages
-                    "GSV" -> {
+                    "GSV" in nmeaType -> {
                         if (sentence.size >= 13) {
                             mPrevSentence = "GSV"
                             if (numGsv != sentence[1].toInt()) {
@@ -155,7 +159,7 @@ internal class NmeaParser {
                             }
                         }
                     }
-                    "GLL" -> {
+                    "GLL" in nmeaType -> {
                         mPrevSentence = "GLL"
                         latitude = if (sentence[2] == "S") "-" + sentence[1] else sentence[1]
                         longitude = if (sentence[4] == "W") "-" + sentence[3] else sentence[3]

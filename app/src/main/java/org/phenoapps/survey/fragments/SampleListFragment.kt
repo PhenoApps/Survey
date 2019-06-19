@@ -31,6 +31,10 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.analytics.FirebaseAnalytics
+import io.socket.client.IO
+import io.socket.client.Manager
+import io.socket.emitter.Emitter
+import io.socket.engineio.client.Transport
 import org.phenoapps.survey.NmeaParser
 import org.phenoapps.survey.R
 import org.phenoapps.survey.adapters.SampleAdapter
@@ -63,6 +67,8 @@ class SampleListFragment: Fragment() {
     private lateinit var mConnectedThread: ConnectedThread
     private lateinit var mConnectThread: ConnectThread
 
+    private var mSocket = IO.socket("https://192.168.42.1")
+
     private lateinit var mLocalBroadcastManager: LocalBroadcastManager
 
     private var parser = NmeaParser()
@@ -79,6 +85,18 @@ class SampleListFragment: Fragment() {
 
         setHasOptionsMenu(true)
 
+        mSocket.let {
+            it!!.connect().on(Manager.EVENT_TRANSPORT) {
+                fun call(args: Array<Any>) {
+                    (args[0] as Transport).on(Transport.EVENT_REQUEST_HEADERS) {
+                        fun call(args: Array<Any>) {
+
+                        }
+                    }
+                }
+            }
+
+        }
         parser = NmeaParser()
 
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(requireContext())
